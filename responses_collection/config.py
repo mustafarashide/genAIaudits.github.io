@@ -17,7 +17,8 @@ config = {
         "model": openai_me_model,
         "rate_limit": 4,
         "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
-        "output_file": os.path.join("data/processed/hist_response", f"{openai_me_model}.csv")
+        "output_file": os.path.join("data/processed/hist_response", f"{openai_me_model}.csv"),
+        "batch_size": 50
     },
     "openai-gpt": {
         "api_key": openai_sorelle_api_key,
@@ -26,7 +27,8 @@ config = {
         "rate_limit": 4,
         "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
         "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt_model}.csv"),
-        "max_tokens_per_day": 850000 # 900k words per day for OpenAI GPT-4.1 (for safety, cap at 850k)
+        "max_tokens_per_day": 850000,  # 900k words per day for OpenAI GPT-4.1 (for safety, cap at 850k)
+        "batch_size": 100
     },
     "deepseek": {
         "api_key": deepseek_api_key,
@@ -34,6 +36,6 @@ config = {
         "rate_limit": 10,
         "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
         "output_file": os.path.join("data/processed/hist_response", f"{deepseek_model}.csv"),
-    },
-    "batch_size": 50
+        "batch_size": 50
+    }
 }

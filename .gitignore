@@ -23,3 +23,7 @@ __pycache__/
 # Apple feature
 .DS_Store
 
+# Logs
+*.log
+logs/
+

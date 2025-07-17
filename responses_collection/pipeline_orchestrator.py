@@ -4,29 +4,87 @@ from typing import Dict, Any
 from openai_client import OpenAIClient
 from deepseek_client import DeepseekClient
 import datetime
+import time
 from openai_batch_client import OpenAIBatchClient
+import logging
 
 class Pipeline:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.batch_size = config.get("batch_size", 50)
-        self.additional_sleep = config.get("additional_sleep", 2)  # Default additional sleep time
+        self.additional_sleep = config.get("additional_sleep", 3)  # Default additional sleep time
         self.max_retries = config.get("max_retries", 10)  # Default max retries
         
         # API-specific initial sleep times based on rate limits
         self.init_sleep_times = {
             "openai-me": 1/ config["openai-me"]["rate_limit"],  # OpenAI ME rate limit: 4 requests/second
+            "openai-gpt": 1/ config["openai-gpt"]["rate_limit"],  # OpenAI GPT rate limit: 60 requests/second
             "deepseek": 1/ config["deepseek"]["rate_limit"]  # Deepseek rate limit: 10 requests/second
         }
+
+        # API-specific batch sizes 
+        self.batch_size = {
+            "openai-me": config["openai-me"]["batch_size"],
+            "openai-gpt": config["openai-gpt"]["batch_size"],
+            "deepseek": config["deepseek"]["batch_size"]
+        }
+        
+        # Create logs directory if it doesn't exist
+        self.logs_dir = Path("responses_collection/logs")
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
+        
+    def _setup_logger(self, api_name: str, dataset_type: str) -> logging.Logger:
+        """Setup logger for specific API and dataset combination"""
+        # Create unique logger name
+        logger_name = f"pipeline_{api_name}_{dataset_type}"
+        
+        # Create logger
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.INFO)
+        
+        # Clear any existing handlers
+        logger.handlers.clear()
+        
+        # Create timestamp for filename
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        log_filename = f"{api_name}_{dataset_type}_{timestamp}.log"
+        log_path = self.logs_dir / log_filename
+        
+        # Create file handler
+        file_handler = logging.FileHandler(log_path)
+        file_handler.setLevel(logging.INFO)
+        
+        # Create formatter
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        
+        # Add handler to logger
+        logger.addHandler(file_handler)
+        
+        return logger
+        
+    def _log_and_print(self, message: str, logger: logging.Logger) -> None:
+        """Log message and print it"""
+        print(message)
+        logger.info(message)
         
     def run(self, dataset: pd.DataFrame, api_name: str, dataset_type: str) -> pd.DataFrame:
         """Main pipeline execution flow"""
+        # Setup logger for this run
+        logger = self._setup_logger(api_name, dataset_type)
+        
         if api_name not in ["openai-me", "deepseek", "openai-gpt"]:
-            raise ValueError(f"Unknown API: {api_name}")
+            error_msg = f"Unknown API: {api_name}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+            
+        # Log pipeline start
+        start_msg = f"Starting pipeline for API: {api_name}, Dataset: {dataset_type}, Rows: {len(dataset)}"
+        self._log_and_print(start_msg, logger)
             
         # 1. Data preparation stage
         prepared_data = self._prepare_data(dataset, api_name, dataset_type)
-        print(f"✓ Data prepared for {api_name} processing")
+        msg = f"✓ Data prepared for {api_name} processing"
+        self._log_and_print(msg, logger)
         
         # 2. Process in batches with resume capability
         temp_file_template = self.config[api_name]["temp_file_template"]
@@ -40,17 +98,25 @@ class Pipeline:
             api_name=api_name,
             init_sleep=self.init_sleep_times[api_name],
             additional_sleep=self.additional_sleep,
-            max_retries=self.max_retries
+            max_retries=self.max_retries,
+            logger=logger
         )
-        print(f"✓ Batch processing completed for {api_name}")
+        msg = f"✓ Batch processing completed for {api_name}"
+        self._log_and_print(msg, logger)
         
         # 3. Validate and clean responses
-        validated_data = self._validate_responses(response_data, dataset)
-        print(f"✓ Response validation completed for {api_name}")
+        validated_data = self._validate_responses(response_data, dataset, logger)
+        msg = f"✓ Response validation completed for {api_name}"
+        self._log_and_print(msg, logger)
         
         # 4. Format final output
         final_data = self._format_output(validated_data, api_name)
-        print(f"✓ Output formatting completed for {api_name}")
+        msg = f"✓ Output formatting completed for {api_name}"
+        self._log_and_print(msg, logger)
+        
+        # Log pipeline completion
+        completion_msg = f"Pipeline completed successfully for API: {api_name}, Dataset: {dataset_type}, Final rows: {len(final_data)}"
+        self._log_and_print(completion_msg, logger)
         
         return final_data
 
@@ -78,7 +144,8 @@ class Pipeline:
         api_name: str,
         init_sleep: float,
         additional_sleep: float,
-        max_retries: int
+        max_retries: int,
+        logger: logging.Logger
     ) -> pd.DataFrame:
         """Process data in batches with resume capability using content_ids"""
         # Get all unique content IDs sorted by category, subcategory, content_id
@@ -92,7 +159,8 @@ class Pipeline:
             # Only consider IDs where flagged is not -1
             valid_processed = existing_data[existing_data['flagged'] != -1]
             processed_ids = set(valid_processed['content_id'])
-            print(f"Found {len(processed_ids)} previously processed items")
+            msg = f"Found {len(processed_ids)} previously processed items"
+            self._log_and_print(msg, logger)
 
             # drop -1 flagged items from existing data
             existing_data = existing_data[existing_data['flagged'] != -1]
@@ -101,11 +169,14 @@ class Pipeline:
         
         # Get remaining content IDs to process (maintaining sort order)
         remaining_ids = [content_id for content_id in all_content_ids if content_id not in processed_ids]
-        print(f"Total items to process: {len(remaining_ids)}")
+        msg = f"Total items to process: {len(remaining_ids)}"
+        self._log_and_print(msg, logger)
+
+        batch_size = self.batch_size.get(api_name, 50)  # Default to 50 if not specified
 
         # Process in batches by content_id
-        for i in range(0, len(remaining_ids), self.batch_size):
-            batch_ids = remaining_ids[i:i + self.batch_size]
+        for i in range(0, len(remaining_ids), batch_size):
+            batch_ids = remaining_ids[i:i + batch_size]
             batch = dataset[dataset['content_id'].isin(batch_ids)].copy().drop_duplicates(subset=['content_id'])
             
             try:
@@ -121,10 +192,13 @@ class Pipeline:
                 # Save progress
                 self._save_batch(processed_batch, temp_file)
                 
-                print(f"✓ Processed batch of {len(batch)} items ({len(remaining_ids) - i - len(batch_ids)} remaining)")
+                msg = f"✓ Processed batch of {len(batch)} items ({len(remaining_ids) - i - len(batch_ids)} remaining)"
+                self._log_and_print(msg, logger)
                 
             except Exception as e:
-                print(f"❌ Error processing batch starting with content_id {batch_ids[0]}: {str(e)}")
+                error_msg = f"❌ Error processing batch starting with content_id {batch_ids[0]}: {str(e)}"
+                self._log_and_print(error_msg, logger)
+                logger.error(error_msg)
                 raise
     
         # Return combined results
@@ -141,15 +215,21 @@ class Pipeline:
     ) -> pd.DataFrame:
         """Make API calls and collect responses"""
         # Initialize API client based on api_name
-        clients = {
-            "openai-me": OpenAIClient(self.config["openai-me"]["api_key"]),
-            "deepseek": DeepseekClient(self.config["deepseek"]["api_key"]),
-            "openai-gpt": OpenAIBatchClient(api_key=self.config["openai-gpt"]["api_key"],
-                                            model=self.config["openai-gpt"]["model"],
-                                            endpoint=self.config["openai-gpt"]["endpoint"])
-        }
+        client = None
+        if api_name == "openai-me":
+            client = OpenAIClient(self.config["openai-me"]["api_key"])
+        elif api_name == "deepseek":
+            client = DeepseekClient(self.config["deepseek"]["api_key"])
+        elif api_name == "openai-gpt":
+            # Use OpenAI GPT batch client for processing
+            client = OpenAIBatchClient(
+                api_key=self.config["openai-gpt"]["api_key"],
+                model=self.config["openai-gpt"]["model"],
+                endpoint=self.config["openai-gpt"]["endpoint"]
+            )
+        else:
+            raise ValueError(f"Unknown API: {api_name}")
         
-        client = clients.get(api_name)
         if not client:
             raise ValueError(f"Unknown API: {api_name}")
         
@@ -158,6 +238,7 @@ class Pipeline:
         # If using OpenAI GPT batch client, process the entire batch at once
         if api_name == "openai-gpt":
             results = client.process_dataset(batch)
+            time.sleep(300)  # sleep for 5 minutes after processing a batch
             return pd.DataFrame(results)
         
         # Process each row in the batch
@@ -189,13 +270,14 @@ class Pipeline:
                     header=not temp_file.exists(), 
                     index=False)
     
-    def _validate_responses(self, df: pd.DataFrame, content_dataset: pd.DataFrame) -> pd.DataFrame:
+    def _validate_responses(self, df: pd.DataFrame, content_dataset: pd.DataFrame, logger: logging.Logger) -> pd.DataFrame:
         """
         Validate API responses against original dataset.
         
         Args:
             df: Response data from API calls
             content_dataset: Original input dataset
+            logger: Logger instance
             
         Returns:
             Validated and deduplicated DataFrame
@@ -206,11 +288,15 @@ class Pipeline:
         try:
             # Check for empty response data
             if df.empty:
-                raise ValueError("Response data is empty")
+                error_msg = "Response data is empty"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
             
             # Check invalid responses
             if (df['flagged'] == -1).any():
-                raise ValueError("Some responses have invalid 'flagged' status (-1)")
+                error_msg = "Some responses have invalid 'flagged' status (-1)"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
             # Get content ID sets
             expected_ids = set(content_dataset['content_id'])
@@ -221,18 +307,25 @@ class Pipeline:
             extra_ids = actual_ids - expected_ids
             
             if missing_ids:
-                raise ValueError(f"Missing responses for {len(missing_ids)} content_ids")
+                error_msg = f"Missing responses for {len(missing_ids)} content_ids"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
                 
             if extra_ids:
-                raise ValueError(f"Found {len(extra_ids)} unexpected content_ids in responses")
+                error_msg = f"Found {len(extra_ids)} unexpected content_ids in responses"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
                 
             # Remove duplicates keeping latest version
             deduped_df = df.drop_duplicates(subset=['content_id'], keep='last')         
-            print(f"✓ Validation passed: {len(deduped_df)} unique responses")
+            msg = f"✓ Validation passed: {len(deduped_df)} unique responses"
+            self._log_and_print(msg, logger)
             return deduped_df
             
         except Exception as e:
-            print(f"❌ Validation failed: {str(e)}")
+            error_msg = f"❌ Validation failed: {str(e)}"
+            self._log_and_print(error_msg, logger)
+            logger.error(error_msg)
             raise
     
     def _format_output(self, df: pd.DataFrame, api_name: str) -> pd.DataFrame:

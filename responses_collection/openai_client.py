@@ -64,8 +64,8 @@ class OpenAIClient:
                     if retry_count <= max_retries:
                         # Arithmetic progression for sleep time
                         current_sleep = init_sleep + (retry_count * additional_sleep)
-                        print(f"Rate limit reached. Retry {retry_count}/{max_retries} "
-                              f"with {current_sleep}s delay...")
+                        # print(f"Rate limit reached. Retry {retry_count}/{max_retries} "
+                        #       f"with {current_sleep}s delay...")
                         continue
                         
                 elif error_code in ['500', '503']:

@@ -79,13 +79,13 @@ class DeepseekClient:
                     
                 elif error_code == '400':
                     if 'content exists risk' in error_str:
-                        print("Found content exists risk error. Flagging content...")
+                        # print("Found content exists risk error. Flagging content...")
                         return {
                             'flagged': 1,
                             'model_response': str(e)
                         }
                     elif 'maximum context length' in error_str and 'tokens' in error_str:
-                        print("Token limit exceeded. Truncating content and retrying...")
+                        # print("Token limit exceeded. Truncating content and retrying...")
                         # Extract the max token limit from error message
                         token_match = re.search(r'maximum context length is (\d+) tokens', error_str)
                         max_tokens = int(token_match.group(1)) if token_match else 65536
@@ -96,7 +96,7 @@ class DeepseekClient:
                         if len(content) > max_chars:
                             # Truncate content and retry
                             truncated_content = content[:max_chars]
-                            print(f"Truncating content from {len(content)} to {len(truncated_content)} characters")
+                            # print(f"Truncating content from {len(content)} to {len(truncated_content)} characters")
                             
                             # Retry with truncated content
                             try:
@@ -137,8 +137,8 @@ class DeepseekClient:
                     retry_count += 1
                     if retry_count <= max_retries:
                         current_sleep = init_sleep + (retry_count * additional_sleep)
-                        print(f"Rate limit reached. Retry {retry_count}/{max_retries} "
-                              f"with {current_sleep}s delay...")
+                        # print(f"Rate limit reached. Retry {retry_count}/{max_retries} "
+                        #       f"with {current_sleep}s delay...")
                         continue
                 
                 elif error_code in ['500', '503']:
