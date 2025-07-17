@@ -21,7 +21,15 @@ to find the pid to `kill`.
 
 ## Update the website
 
-TODO: add description here
+From this top level directory run:
+
+`python3 -m front_end_pipeline.pipeline`
+
+**Warning: Running this command will update and replace index.html**
+The previous version of index.html will be saved as `index_old` with a timestamp so that it can be retrieved if necessary, and of course the repository maintains old versions.
+
+Note that this command takes awhile to run since it is handling the large dataset.
+
 
 # Repository Structure
 
@@ -45,19 +53,20 @@ response_data: ad hoc experimentation with DeepSeek and refusal messages
 
 ## front_end_pipeline
 
-`pipeline.py` is the main script; it creates the visualizations based on the data in hist_response and saves output to `front_end_pipeline/html_output`. It should be run from the top directory as:
+`pipeline.py` is the main script; it creates the visualizations based on the data in hist_response and saves output to `index.html`. See above for information about how to use it to update the website.
 
-`python3 -m front_end_pipeline.pipeline`
-
-Note that this command takes awhile to run since it is handling the large dataset.
+`src` contains the code to generate the website:
+- `data.py`: loads the data from hist_response and combines it with category and content information. Key method: `load_data`.
+- `charts.py`: takes in the data prepared by `data.py` and generates the plotly figures. Key method: `create_trends_chart`
+- `html.py`: creates the dashboard containing the figures. Key method: `generate_dashboard_html`
 
 ## responses_collection
 
 Handles response collection for all models we consider (OpenAI's ME, OpenAI's GPT-4.1, and DeepSeek). The files in this directory will be run via a cron job. The usual way to run this collection is:
-`responses_collection/main.py --api openai-me --dataset all`
+`responses_collection/main.py --api openai-me --dataset wiki`
 which will collect responses for the Issues dataset (in English only) and the TV and Movies dataset from OpenAI's moderation endpoint (ME) API. The collected responses will be put in data/processed/hist_response
 and labeled with the model name, dataset option, and a timestamp.
 
 ## translate
 
-Handles the translation to Chinese for the Issues dataset.
+Handles the translation to Chinese used to generate the Chinese version of the Issues dataset.
