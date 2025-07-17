@@ -1,0 +1,510 @@
+{
+    "Politics and Government": [
+        "Congress",
+        "Federal Government",
+        "Government",
+        "Partisanship and Issues",
+        "Political Animosity",
+        "Political and Civic Engagement",
+        "Political Discourse",
+        "Political Issues",
+        "Political Typology",
+        "Politics and Policy",
+        "Presidential Approval",
+        "Protests and Uprisings",
+        "State and Local Government",
+        "Supreme Court",
+        "Issue Priorities",
+        "Leaders",
+        "More Leaders",
+        "National Conditions",
+        "Public Knowledge",
+        "U.S. Census"
+    ],
+    "Institutional Trust": [
+        "Trust, Facts and Democracy",
+        "Trust in Institutions",
+        "Trust in Government"
+    ],
+    "U.S. Political Figures": [
+        "Bill Clinton",
+        "Barack Obama",
+        "Donald Trump",
+        "Joe Biden",
+        "Kamala Harris",
+        "George W. Bush"
+    ],
+    "Ideology and Political Systems": [
+        "Authoritarianism",
+        "Capitalism",
+        "Communism",
+        "Democracy",
+        "Political Ideals and Systems",
+        "U.S. Democracy",
+        "Nationalism",
+        "Socialism",
+        "Populism",
+        "Human Rights"
+    ],
+    "Gun Policy": [
+        "Gun Policy"
+    ],
+    "Drug Policy": [
+        "Drug Policy"
+    ],
+    "Military and Security": [
+        "Defense and National Security",
+        "Nuclear Weapons",
+        "Terrorism",
+        "Military and Veterans"
+    ],
+    "Elections": [
+        "Election 2002",
+        "Election 2004",
+        "Election 2006",
+        "Election 2008",
+        "Election 2010",
+        "Election 2012",
+        "Election 2014",
+        "Election 2016",
+        "Election 2018",
+        "Election 2020",
+        "Election 2022",
+        "Election 2024",
+        "Election News",
+        "Election System and Voting Process",
+        "Elections Before 2008",
+        "U.S. Elections and Voters",
+        "Voter Demographics",
+        "Voter Files",
+        "Voter Participation",
+        "Voters and Voting",
+        "Hispanic/Latino Voters",
+        "Party Identification",
+        "Political Parties",
+        "Political Parties and Polarization",
+        "Political Polarization"
+    ],
+    "AI and Automation": [
+        "Algorithms",
+        "Artificial Intelligence",
+        "Automation",
+        "Bots",
+        "Bots and Misinformation",
+        "Data Science"
+    ],
+    "Biotechnology and Life Sciences": [
+        "Biotech",
+        "Gene Editing",
+        "Human Enhancement"
+    ],
+    "Digital Communication & Social Platforms": [
+        "Apps",
+        "Blogs",
+        "Facebook",
+        "Instagram",
+        "TikTok",
+        "Twitter (X)",
+        "Texting",
+        "YouTube",
+        "Social Media",
+        "Email",
+        "Online Search",
+        "Platforms and Services",
+        "More Platforms and Services"
+    ],
+    "Internet Infrastructure & Connectivity": [
+        "Broadband",
+        "Digital Divide",
+        "Internet Connectivity",
+        "Internet of Things",
+        "Mobile",
+        "Technology Adoption",
+        "Smartphones",
+        "Rural Residents and Tech"
+    ],
+    "Cybersecurity, Privacy & Misinformation": [
+        "Cyberattacks",
+        "Privacy Rights",
+        "Online Privacy and Security",
+        "Misinformation Online",
+        "Misinformation",
+        "Net Neutrality",
+        "Global Tech and Cybersecurity"
+    ],
+    "Social Impact of Technology": [
+        "Children and Tech",
+        "Older Adults and Tech",
+        "Teens and Tech",
+        "User Demographics",
+        "Gender and Tech",
+        "Online Activism",
+        "Online Services",
+        "Civic Activities Online",
+        "Online Dating",
+        "Online Harassment and Bullying",
+        "Stresses and Distraction Online",
+        "Social Relations and Tech"
+    ],
+    "Digital Commerce and Consumption": [
+        "E-Commerce",
+        "E-Reading"
+    ],
+    "Technology Policy, Industry & Global Trends": [
+        "Technology and Immigration",
+        "Politics Online",
+        "Technology Policy Issues",
+        "Tech Companies",
+        "Science and Tech",
+        "Emerging Technology",
+        "Internet and Technology"
+    ],
+    "Gaming and Entertainment": [
+        "Gaming"
+    ],
+    "Religious Traditions and Denominations": [
+        "Atheism and Agnosticism",
+        "Buddhism",
+        "Catholicism",
+        "Christianity",
+        "Evangelicalism",
+        "Hinduism",
+        "Historically Black Protestantism",
+        "Islam",
+        "Muslim Americans",
+        "Judaism",
+        "Latter-day Saint (Mormon)",
+        "Mainline Protestantism",
+        "Non-Religion and Secularism",
+        "Orthodox Christianity",
+        "Other Religions",
+        "Pentecostalism",
+        "Protestantism"
+    ],
+    "Religion in Society, Ethics, and Politics": [
+        "Religion and Politics",
+        "Religion and Government",
+        "Religion and Abortion",
+        "Religion and Bioethics",
+        "Religion and Death Penalty",
+        "Religion and LGBTQ Acceptance",
+        "Religion and Race",
+        "Religion and Science",
+        "Religion and Social Values"
+    ],
+    "Religious Studies, Identity, and Demographics": [
+        "Religion",
+        "Comparison of Religions",
+        "Religions",
+        "Religious Characteristics of Demographic Groups",
+        "Religious Commitment",
+        "Religious Demographics",
+        "Religious Freedom and Restrictions",
+        "Beliefs and Practices",
+        "Gender and Religion",
+        "Religious Identity and Affiliation",
+        "Religious Knowledge and Education",
+        "Religious Leaders and Institutions",
+        "Religious Typology",
+        "Religiously Unaffiliated",
+        "Size and Demographic Characteristics of Religious Groups",
+        "U.S. Religious Demographics",
+        "Global Religious Demographics",
+        "Interreligious Relations",
+        "Muslims Around the World"
+    ],
+    "Race and Ethnicity": [
+        "Black Americans",
+        "Hispanic/Latino Demographics",
+        "Hispanic/Latino Identity",
+        "Hispanics/Latinos",
+        "Race and Ethnicity",
+        "Race, Ethnicity and Politics",
+        "Racial and Ethnic Groups",
+        "Racial and Ethnic Identity",
+        "Racial and Ethnic Shifts",
+        "Race, Ethnicity and Religion",
+        "White Americans",
+        "More Racial and Ethnic Groups",
+        "Asian Americans",
+        "Hispanics/Latinos and Language",
+        "Hispanics/Latinos and Income",
+        "Racial and Ethnic Groups Online"
+    ],
+    "Family and Relationships": [
+        "Divorce",
+        "Marriage and Divorce",
+        "Family and Relationships",
+        "Parenthood",
+        "Household Structure and Family Roles",
+        "Motherhood and Fatherhood",
+        "Racial Intermarriage",
+        "Intermarriage",
+        "Unmarried Adults"
+    ],
+    "Demographic Research and Immigration": [
+        "Demographic Research",
+        "Demographics and Politics",
+        "Fertility",
+        "Immigrant Populations",
+        "Immigration Trends",
+        "Rural, Urban and Suburban Communities"
+    ],
+    "Age and Generations": [
+        "Age",
+        "Age, Generations and Tech",
+        "Age and Generations",
+        "Baby Boomers",
+        "Birth Rate and Fertility",
+        "Comparison of Age Groups",
+        "Comparison of Generations",
+        "Death and Dying",
+        "Generation X",
+        "Generation Z",
+        "Generations",
+        "Generations, Age and Politics",
+        "Greatest Generation",
+        "Millennials",
+        "Millennials and Other Age Groups",
+        "Older Adults and Aging",
+        "Silent Generation",
+        "Teens and Youth",
+        "Younger Adults"
+    ],
+    "Macroeconomic Policy & Systems": [
+        "Economic Conditions",
+        "Economic Policy",
+        "Economic Systems",
+        "Government Spending and the Deficit",
+        "Recessions and Recoveries",
+        "Taxes"
+    ],
+    "International Trade & Global Economy": [
+        "Global Economy and Trade",
+        "Global Trade",
+        "Immigration and Economy"
+    ],
+    "Labor and Employment": [
+        "Economy and Work",
+        "Economics, Work and Gender",
+        "Employee Benefits",
+        "Layoffs and Employment",
+        "Unemployment",
+        "Unions"
+    ],
+    "Income, Wealth, and Inequality": [
+        "Economic Inequality",
+        "Income and Wages",
+        "Income, Wealth and Poverty",
+        "Poverty",
+        "Wealth"
+    ],
+    "Household Finances & Social Safety Nets": [
+        "Middle Class",
+        "Personal Finances",
+        "Social Security and Medicare",
+        "Retirement",
+        "Homeownership and Renting"
+    ],
+    "Alternative & Emerging Economies": [
+        "Remittances",
+        "Gig and Sharing Economies"
+    ],
+    "Gender Issues": [
+        "Gender",
+        "Gender Equality and Discrimination",
+        "Gender Identity",
+        "Gender Roles",
+        "Gender and Leadership",
+        "Gender Pay Gap",
+        "Gender and Work",
+        "Sexual Misconduct and Harassment",
+        "Gender and Politics"
+    ],
+    "LGBTQ Issues": [
+        "Gender and LGBTQ",
+        "LGBTQ Acceptance",
+        "LGBTQ Attitudes and Experiences",
+        "Same-Sex Marriage"
+    ],
+    "Race and Discrimination": [
+        "Affirmative Action",
+        "Discrimination and Prejudice",
+        "Race Relations",
+        "Racial Bias and Discrimination",
+        "Segregation"
+    ],
+    "Criminal Justice and Law Enforcement": [
+        "Death Penalty",
+        "Criminal Justice",
+        "Police",
+        "Border Security and Enforcement"
+    ],
+    "Abortion": [
+        "Abortion"
+    ],
+    "Disasters and Accidents": [
+        "Disasters and Accidents"
+    ],
+    "Immigration": [
+        "Immigration and Migration",
+        "Unauthorized Immigration",
+        "Citizenship",
+        "Immigration Attitudes",
+        "Immigration and Language Adoption",
+        "High-Skilled Immigration",
+        "Family Reunification",
+        "Legal Immigration",
+        "Immigration Issues",
+        "Visas and Employment",
+        "Integration and Identity",
+        "Refugees and Asylum Seekers"
+    ],
+    "Climate and Environment": [
+        "Climate, Energy and Environment",
+        "Energy",
+        "Environment and Climate"
+    ],
+    "Health and Medicine": [
+        "Health Policy",
+        "Global Health",
+        "Health Care",
+        "Medicine and Health",
+        "Vaccines",
+        "Healthcare Online"
+    ],
+    "General Science and Research": [
+        "Science",
+        "Science Funding and Policy",
+        "Science Issues",
+        "Science Knowledge",
+        "Science News and Information",
+        "Scientists' Views",
+        "Evolution",
+        "Food Science",
+        "Space",
+        "Trust in Science"
+    ],
+    "Covid-19": [
+        "COVID-19 and Politics",
+        "COVID-19 and the Economy",
+        "COVID-19 and Technology",
+        "Coronavirus (COVID-19)",
+        "COVID-19 and Science",
+        "COVID-19 in the News"
+    ],
+    "Media and News": [
+        "Audio, Radio and Podcasts",
+        "Digital News Landscape",
+        "Facts and Fact Checking",
+        "Journalists",
+        "Media and Society",
+        "Local News",
+        "Media Attitudes",
+        "Media Industry",
+        "Media Layoffs and Employment",
+        "Media Polarization",
+        "News Audience Demographics",
+        "News Content Analysis",
+        "News Coverage",
+        "News Habits and Media",
+        "News Knowledge",
+        "News Media Trends",
+        "News Platforms and Sources",
+        "Newspapers",
+        "Presidents and Press",
+        "Politics and Media",
+        "Television",
+        "Social Media and the News",
+        "Trust in Media",
+        "Freedom of the Press",
+        "Free Speech and Press"
+    ],
+    "Education": [
+        "Education",
+        "Education and Gender",
+        "Education and Learning Online",
+        "Education and Politics",
+        "Educational Attainment",
+        "Higher Education",
+        "Hispanics/Latinos and Education",
+        "K-12",
+        "Knowledge and Education",
+        "Libraries",
+        "STEM Education and Workforce",
+        "Student Loans"
+    ],
+    "International Institutions and Alliances": [
+        "Bilateral Relations",
+        "European Union",
+        "NATO",
+        "United Nations",
+        "Organizations, Alliances and Treaties",
+        "Non-U.S. Governments"
+    ],
+    "Global Image and Perception": [
+        "China Global Image",
+        "Israel Global Image",
+        "U.S. Global Image",
+        "Global Image of Countries"
+    ],
+    "Global Power and Security": [
+        "Global Balance of Power",
+        "War and International Conflict",
+        "International Terrorism",
+        "World Leaders"
+    ],
+    "International Affairs and Public Opinion": [
+        "International Issues",
+        "International Affairs",
+        "International Political Values",
+        "World Elections",
+        "International Religious Freedom and Restrictions",
+        "International Technology",
+        "Migration Issues"
+    ],
+    "International Leaders": [
+        "Pope Benedict XVI",
+        "Pope Francis",
+        "Narendra Modi",
+        "Vladimir Putin",
+        "Pope John Paul II",
+        "Angela Merkel"
+    ],
+    "Lifestyle": [
+        "Entertainment",
+        "Leisure",
+        "Lifestyle",
+        "Lifestyle and Relationships Online",
+        "Music",
+        "Personal Life",
+        "Romance and Dating",
+        "Time Use",
+        "Transportation",
+        "Video",
+        "Family Caregiving",
+        "Friendships",
+        "Happiness and Life Satisfaction"
+    ],
+    "Workplace": [
+        "Business and Workplace",
+        "Future of Work",
+        "Job Satisfaction",
+        "Occupational Groups",
+        "Workplace Automation"
+    ],
+    "Methodology": [
+        "Methodological Research",
+        "Nonprobability Surveys",
+        "Online Random Sample Surveys",
+        "Online Surveys",
+        "Survey Basics",
+        "Survey Methods",
+        "Telephone Surveys",
+        "Research Explainers",
+        "International Survey Methods"
+    ], 
+    "Sensitive Topics in China": [
+        
+    ]
+}

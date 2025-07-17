@@ -1,0 +1,250 @@
+from pathlib import Path
+import pandas as pd
+from typing import Dict, Any
+from openai_client import OpenAIClient
+from deepseek_client import DeepseekClient
+import datetime
+from openai_batch_client import OpenAIBatchClient
+
+class Pipeline:
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+        self.batch_size = config.get("batch_size", 50)
+        self.additional_sleep = config.get("additional_sleep", 2)  # Default additional sleep time
+        self.max_retries = config.get("max_retries", 10)  # Default max retries
+        
+        # API-specific initial sleep times based on rate limits
+        self.init_sleep_times = {
+            "openai-me": 1/ config["openai-me"]["rate_limit"],  # OpenAI ME rate limit: 4 requests/second
+            "deepseek": 1/ config["deepseek"]["rate_limit"]  # Deepseek rate limit: 10 requests/second
+        }
+        
+    def run(self, dataset: pd.DataFrame, api_name: str, dataset_type: str) -> pd.DataFrame:
+        """Main pipeline execution flow"""
+        if api_name not in ["openai-me", "deepseek", "openai-gpt"]:
+            raise ValueError(f"Unknown API: {api_name}")
+            
+        # 1. Data preparation stage
+        prepared_data = self._prepare_data(dataset, api_name, dataset_type)
+        print(f"✓ Data prepared for {api_name} processing")
+        
+        # 2. Process in batches with resume capability
+        temp_file_template = self.config[api_name]["temp_file_template"]
+        temp_file = Path(temp_file_template.format(
+            model=self.config[api_name]["model"], 
+            dataset=dataset_type
+        ))
+        response_data = self._process_in_batches(
+            dataset=prepared_data,
+            temp_file=temp_file,
+            api_name=api_name,
+            init_sleep=self.init_sleep_times[api_name],
+            additional_sleep=self.additional_sleep,
+            max_retries=self.max_retries
+        )
+        print(f"✓ Batch processing completed for {api_name}")
+        
+        # 3. Validate and clean responses
+        validated_data = self._validate_responses(response_data, dataset)
+        print(f"✓ Response validation completed for {api_name}")
+        
+        # 4. Format final output
+        final_data = self._format_output(validated_data, api_name)
+        print(f"✓ Output formatting completed for {api_name}")
+        
+        return final_data
+
+    def _prepare_data(self, dataset: pd.DataFrame, api_name: str, dataset_type: str) -> pd.DataFrame:
+        """Prepare data based on API requirements"""
+        if api_name == "openai-me":
+            return dataset  # OpenAI-ME does not require special formatting
+        elif api_name == "openai-gpt":
+            # OpenAI GPT requires content to be prefixed with "repeat after me:"
+            dataset['content'] = dataset['content'].apply(lambda x: f"repeat after me: {x}")
+            return dataset
+        elif api_name == "deepseek": 
+            # Check if the dataset_type is 'cn-wiki' and modify content accordingly
+            if dataset_type == "cn-wiki":
+                dataset['content'] = dataset['content'].apply(lambda x: f"跟我说：{x}")
+            elif dataset_type == "wiki":
+                dataset['content'] = dataset['content'].apply(lambda x: f"repeat after me: {x}")
+            return dataset # DeepSeek requires to repeat content
+        raise ValueError(f"Unknown API: {api_name}")
+    
+    def _process_in_batches(
+        self, 
+        dataset: pd.DataFrame, 
+        temp_file: Path,
+        api_name: str,
+        init_sleep: float,
+        additional_sleep: float,
+        max_retries: int
+    ) -> pd.DataFrame:
+        """Process data in batches with resume capability using content_ids"""
+        # Get all unique content IDs sorted by category, subcategory, content_id
+        dataset_sorted = dataset.drop_duplicates(subset=['content_id']).sort_values(['category', 'subcategory', 'content_id'])
+        all_content_ids = dataset_sorted['content_id'].tolist()
+        
+        # Check for existing progress
+        processed_ids = set()
+        if temp_file.exists():
+            existing_data = pd.read_csv(temp_file)
+            # Only consider IDs where flagged is not -1
+            valid_processed = existing_data[existing_data['flagged'] != -1]
+            processed_ids = set(valid_processed['content_id'])
+            print(f"Found {len(processed_ids)} previously processed items")
+
+            # drop -1 flagged items from existing data
+            existing_data = existing_data[existing_data['flagged'] != -1]
+            # Save existing data back to temp file without failed items
+            existing_data.to_csv(temp_file, mode='w', index=False)
+        
+        # Get remaining content IDs to process (maintaining sort order)
+        remaining_ids = [content_id for content_id in all_content_ids if content_id not in processed_ids]
+        print(f"Total items to process: {len(remaining_ids)}")
+
+        # Process in batches by content_id
+        for i in range(0, len(remaining_ids), self.batch_size):
+            batch_ids = remaining_ids[i:i + self.batch_size]
+            batch = dataset[dataset['content_id'].isin(batch_ids)].copy().drop_duplicates(subset=['content_id'])
+            
+            try:
+                # Process batch through API with retry parameters
+                processed_batch = self._call_api(
+                    batch=batch,
+                    api_name=api_name,
+                    init_sleep=init_sleep,
+                    additional_sleep=additional_sleep,
+                    max_retries=max_retries
+                )
+                
+                # Save progress
+                self._save_batch(processed_batch, temp_file)
+                
+                print(f"✓ Processed batch of {len(batch)} items ({len(remaining_ids) - i - len(batch_ids)} remaining)")
+                
+            except Exception as e:
+                print(f"❌ Error processing batch starting with content_id {batch_ids[0]}: {str(e)}")
+                raise
+    
+        # Return combined results
+        final_df = pd.read_csv(temp_file)  
+        return final_df
+    
+    def _call_api(
+        self, 
+        batch: pd.DataFrame,
+        api_name: str,
+        init_sleep: float,
+        additional_sleep: float,
+        max_retries: int
+    ) -> pd.DataFrame:
+        """Make API calls and collect responses"""
+        # Initialize API client based on api_name
+        clients = {
+            "openai-me": OpenAIClient(self.config["openai-me"]["api_key"]),
+            "deepseek": DeepseekClient(self.config["deepseek"]["api_key"]),
+            "openai-gpt": OpenAIBatchClient(api_key=self.config["openai-gpt"]["api_key"],
+                                            model=self.config["openai-gpt"]["model"],
+                                            endpoint=self.config["openai-gpt"]["endpoint"])
+        }
+        
+        client = clients.get(api_name)
+        if not client:
+            raise ValueError(f"Unknown API: {api_name}")
+        
+        results = []
+
+        # If using OpenAI GPT batch client, process the entire batch at once
+        if api_name == "openai-gpt":
+            results = client.process_dataset(batch)
+            return pd.DataFrame(results)
+        
+        # Process each row in the batch
+        for _, row in batch.iterrows():
+            # Call API with retry logic handled by client
+            response = client.call_moderation(
+                content=row['content'],
+                init_sleep=init_sleep,
+                additional_sleep=additional_sleep,
+                max_retries=max_retries
+            )
+
+            # print(f"Processed content_id {row['content_id']} with response: {response}")
+            
+            # Collect results
+            results.append({
+                'content_id': row['content_id'],
+                'flagged': response.get('flagged', -1),
+                'model_response': response.get('model_response', -1)
+            })
+        
+        # Convert results to DataFrame
+        return pd.DataFrame(results)
+    
+    def _save_batch(self, batch: pd.DataFrame, temp_file: Path) -> None:
+        """Save batch results with header only if file doesn't exist"""
+        batch.to_csv(temp_file, 
+                    mode='a', 
+                    header=not temp_file.exists(), 
+                    index=False)
+    
+    def _validate_responses(self, df: pd.DataFrame, content_dataset: pd.DataFrame) -> pd.DataFrame:
+        """
+        Validate API responses against original dataset.
+        
+        Args:
+            df: Response data from API calls
+            content_dataset: Original input dataset
+            
+        Returns:
+            Validated and deduplicated DataFrame
+            
+        Raises:
+            ValueError: If validation fails
+        """
+        try:
+            # Check for empty response data
+            if df.empty:
+                raise ValueError("Response data is empty")
+            
+            # Check invalid responses
+            if (df['flagged'] == -1).any():
+                raise ValueError("Some responses have invalid 'flagged' status (-1)")
+
+            # Get content ID sets
+            expected_ids = set(content_dataset['content_id'])
+            actual_ids = set(df['content_id'])
+            
+            # Check for missing or extra content IDs
+            missing_ids = expected_ids - actual_ids
+            extra_ids = actual_ids - expected_ids
+            
+            if missing_ids:
+                raise ValueError(f"Missing responses for {len(missing_ids)} content_ids")
+                
+            if extra_ids:
+                raise ValueError(f"Found {len(extra_ids)} unexpected content_ids in responses")
+                
+            # Remove duplicates keeping latest version
+            deduped_df = df.drop_duplicates(subset=['content_id'], keep='last')         
+            print(f"✓ Validation passed: {len(deduped_df)} unique responses")
+            return deduped_df
+            
+        except Exception as e:
+            print(f"❌ Validation failed: {str(e)}")
+            raise
+    
+    def _format_output(self, df: pd.DataFrame, api_name: str) -> pd.DataFrame:
+        """Format final output with model and date metadata"""
+        # Create a copy to avoid modifying input DataFrame
+        output_df = df.copy()
+        
+        # Get current date
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        
+        # Add metadata columns
+        output_df['model'] = self.config[api_name]['model']
+        output_df['date'] = current_date
+        
+        return output_df

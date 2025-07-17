@@ -1,0 +1,524 @@
+"""HTML dashboard generation module."""
+from jinja2 import Environment, DictLoader
+import pandas as pd
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+import plotly
+import json
+from datetime import datetime
+
+
+def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
+    """
+    Generate complete HTML dashboard with 4 charts and click-based filtering.
+    
+    Args:
+        fig_input_dict: Dict with title as key, [figure, dataframe] as value
+        
+    Returns:
+        Complete HTML string for the dashboard
+    """
+    # Convert figures to HTML and prepare data
+    chart_htmls = {}
+    chart_data = {}  # Store dataframes as JSON for JavaScript access
+    
+    # First, determine the y-axis range across all figures
+    y_max = 0
+    for title, (fig, df) in fig_input_dict.items():
+        for trace in fig.data:
+            if hasattr(trace, 'y') and trace.y is not None:
+                y_max = max(y_max, max(trace.y))
+    
+    # Add some padding to the max value
+    y_range = [0, y_max * 1.1]
+    
+    for i, (title, (fig, df)) in enumerate(fig_input_dict.items()):
+        # Create unique chart ID
+        chart_id = f"chart_{i}"
+        
+        # Modify figure properties
+        '''fig.update_layout(
+            showlegend=(i == 0),  # Only show legend for first chart
+            yaxis=dict(
+                range=y_range,  # Use consistent y-axis range
+                tickformat=".1f"
+            ),
+            margin=dict(l=50, r=30, t=50, b=50)  # Tighter margins for smaller charts
+        )'''
+        
+        # Convert Plotly figure to HTML
+        if i == 0:
+            # First chart includes full plotlyjs
+            chart_html = fig.to_html(include_plotlyjs='inline', div_id=chart_id)
+        else:
+            # Subsequent charts don't include plotlyjs
+            chart_html = fig.to_html(include_plotlyjs=False, div_id=chart_id)
+        
+        # Extract just the div part (remove html/head/body tags)
+        start_div = chart_html.find('<div')
+        end_div = chart_html.rfind('</div>') + 6
+        chart_div = chart_html[start_div:end_div]
+        
+        chart_htmls[title] = {
+            'html': chart_div,
+            'id': chart_id
+        }
+        
+        # Prepare dataframe for JavaScript (all data, both flagged and not flagged)
+        df_for_js = df.copy()
+        df_for_js['date'] = df_for_js['date'].dt.strftime('%Y-%m-%d') if pd.api.types.is_datetime64_any_dtype(df_for_js['date']) else df_for_js['date']
+        df_for_js['content'] = df_for_js['content'].astype(str).str[:300] + '...'  # Shorten content for display
+        df_for_js['model_response_full'] = df_for_js['model_response'].astype(str).apply(lambda x: x[:300] + '...' if len(x) > 300 else x)
+        df_for_js['model_response_short'] = df_for_js['model_response_full'].str[:100] + '...'
+        df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 100
+        df_for_js = df_for_js.sort_values(by=['flagged', 'date'], ascending=False)  # Sort by flagged status and date
+
+        # drop model_response column for size optimization
+        if 'model_response' in df_for_js.columns:
+            df_for_js = df_for_js.drop(columns=['model_response'])
+        chart_data[title] = df_for_js.to_dict('records')
+    
+    # Template variables
+    template_vars = {
+        'chart_htmls': chart_htmls,
+        'chart_data': json.dumps(chart_data),  # Pass data as JSON
+        'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'css_content': _get_css_content(),
+        'js_content': _get_js_content()
+    }
+    
+    # Render and return HTML
+    return _render_template(template_vars)
+
+
+def _render_template(template_vars: Dict) -> str:
+    """Render HTML template with 4 charts and click-based filtering."""
+    template_str = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>AI Moderation Dashboard</title>
+    <style>{{ css_content }}</style>
+</head>
+<body>
+    <header>
+        <h1>📊 Speech Suppression Moderation Dashboard</h1>
+        <div class="metadata">
+            <span>🕒 Last updated: {{ last_updated }}</span>
+        </div>
+        <div class="instructions">
+            <p>💡 Click on any category point in the charts OR click on legend items to view detailed data for that category</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Four Charts Grid -->
+        <div class="charts-grid">
+            {% for title, chart_info in chart_htmls.items() %}
+            <div class="chart-container" data-chart-title="{{ title }}">
+                <h2>{{ title }}</h2>
+                {{ chart_info.html | safe }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Dynamic Table Section (initially hidden) -->
+        <section id="tableSection" class="table-section" style="display: none;">
+            <div class="table-header">
+                <h2 id="tableTitle">Category Data</h2>
+                <button id="clearTable" class="clear-btn">Clear Table</button>
+            </div>
+            <div id="tableContainer"></div>
+        </section>
+    </main>
+
+    <!-- Pass data to JavaScript -->
+    <script>
+        window.chartData = {{ chart_data | safe }};
+    </script>
+    <script>{{ js_content }}</script>
+</body>
+</html>
+"""
+    
+    env = Environment(loader=DictLoader({'dashboard': template_str}))
+    template = env.get_template('dashboard')
+    return template.render(**template_vars)
+
+
+def _get_css_content() -> str:
+    """CSS for 4-chart grid layout and click-based interaction."""
+    return """
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 20px; 
+            line-height: 1.6; 
+            background-color: #f8f9fa;
+        }
+        
+        header h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            text-align: center;
+        }
+        
+        .metadata { 
+            color: #666; 
+            font-size: 12px; 
+            text-align: center;
+            margin-bottom: 10px; 
+        }
+        
+        .instructions {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            color: #1565c0;
+        }
+        
+        /* 4-Chart Grid Layout */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+            min-height: 1200px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+        }
+        
+        .chart-container:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .chart-container h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #34495e;
+            font-size: 16px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        /* Table Section */
+        .table-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .table-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .clear-btn:hover {
+            background: #c0392b;
+        }
+        
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+        
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .data-table tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .flagged-1 {
+            background-color: #ffebee !important;
+        }
+        
+        .flagged-0 {
+            background-color: #e8f5e8 !important;
+        }
+        
+        .response-cell {
+            max-width: 250px;
+            word-wrap: break-word;
+        }
+        
+        .expand-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .expand-btn:hover {
+            background: #2980b9;
+        }
+        
+        .full-text {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .short-text {
+            word-wrap: break-word;
+        }
+        
+        .table-info {
+            margin-top: 10px;
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 400px);
+                min-height: auto;
+            }
+        }
+    """
+
+
+def _get_js_content() -> str:
+    """JavaScript for click-based category filtering."""
+    return """
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableSection = document.getElementById('tableSection');
+            const tableTitle = document.getElementById('tableTitle');
+            const tableContainer = document.getElementById('tableContainer');
+            const clearBtn = document.getElementById('clearTable');
+            
+            // Add click listeners to all charts
+            Object.keys(window.chartData).forEach((chartTitle, index) => {
+                const chartDiv = document.getElementById(`chart_${index}`);
+                if (chartDiv) {
+                    // Point click event
+                    chartDiv.on('plotly_click', function(data) {
+                        console.log('Click data:', data); // Debug log
+                        if (data.points && data.points.length > 0) {
+                            const clickedCategory = data.points[0].data.name;
+                            console.log('Clicked category from point:', clickedCategory); // Debug log
+                            showCategoryData(chartTitle, clickedCategory);
+                        }
+                    });
+                    
+                    // Legend click event
+                    chartDiv.on('plotly_legendclick', function(data) {
+                        console.log('Legend click data:', data); // Debug log
+                        
+                        // For legend clicks, we need to access the trace name differently
+                        // data.curveNumber gives us the trace index
+                        // We need to get the trace from the plot's data
+                        const plotElement = document.getElementById(`chart_${index}`);
+                        const plotData = plotElement.data;
+                        
+                        if (plotData && plotData[data.curveNumber]) {
+                            const clickedCategory = plotData[data.curveNumber].name;
+                            console.log('Clicked category from legend:', clickedCategory); // Debug log
+                            showCategoryData(chartTitle, clickedCategory);
+                        }
+                        
+                        // Return false to prevent default legend behavior (hide/show trace)
+                        return false;
+                    });
+                }
+            });
+            
+            // Clear table button
+            clearBtn.addEventListener('click', function() {
+                tableSection.style.display = 'none';
+            });
+            
+            // Handle expand/collapse clicks
+            tableContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('expand-btn')) {
+                    const responseCell = e.target.closest('.response-cell');
+                    const shortText = responseCell.querySelector('.short-text');
+                    const fullText = responseCell.querySelector('.full-text');
+                    const expandBtn = responseCell.querySelector('.expand-btn');
+                    
+                    if (fullText.style.display === 'none' || !fullText.style.display) {
+                        // Show full text
+                        shortText.style.display = 'none';
+                        fullText.style.display = 'block';
+                        expandBtn.textContent = 'Show Less';
+                    } else {
+                        // Show short text
+                        shortText.style.display = 'block';
+                        fullText.style.display = 'none';
+                        expandBtn.textContent = 'Show More';
+                    }
+                }
+            });
+            
+            function showCategoryData(chartTitle, category) {
+                console.log('Showing data for:', chartTitle, category); // Debug log
+                
+                // Get data for the clicked chart
+                const chartData = window.chartData[chartTitle];
+                
+                // Filter data for the clicked category
+                const categoryData = chartData.filter(row => row.category === category);
+                
+                console.log('Filtered data:', categoryData); // Debug log
+                
+                if (categoryData.length === 0) {
+                    alert(`No data found for category: ${category} in chart: ${chartTitle}`);
+                    return;
+                }
+                
+                // Update table title
+                tableTitle.textContent = `${chartTitle} - ${category} Category Data`;
+                
+                // Generate table HTML
+                const tableHTML = generateTableHTML(categoryData);
+                tableContainer.innerHTML = tableHTML;
+                
+                // Show table section
+                tableSection.style.display = 'block';
+                
+                // Scroll to table
+                tableSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            function generateTableHTML(data) {
+                const flaggedCount = data.filter(row => row.flagged === 1).length;
+                const notFlaggedCount = data.filter(row => row.flagged === 0).length;
+                
+                let html = `
+                    <div class="table-info">
+                        Total: ${data.length} items | 
+                        Flagged: ${flaggedCount} | 
+                        Not Flagged: ${notFlaggedCount}
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Subcategory</th>
+                                <th>Source & Content</th>
+                                <th>Model</th>
+                                <th>Date</th>
+                                <th>Flagged</th>
+                                <th>Response / Reasons</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.forEach(row => {
+                    const flaggedClass = row.flagged === 1 ? 'flagged-1' : 'flagged-0';
+                    
+                    // Create source cell with permanent link and content preview
+                    let sourceContent;
+                    if (row.permanent_link) {
+                        const linkText = row.source || 'Link';
+                        let contentPreview = '';
+                        
+                        if (row.content && row.content.trim() !== '') {
+                            // Show first 100 chars of content
+                            const content = row.content.substring(0, 100);
+                            contentPreview = `<br><small class="content-preview">${content}${row.content.length > 100 ? '...' : ''}</small>`;
+                        } else {
+                            // Show "see link" if no content
+                            contentPreview = '<br><small class="see-link">see link</small>';
+                        }
+                        
+                        sourceContent = `
+                            <a href="${row.permanent_link}" target="_blank" class="source-link">${linkText}</a>
+                            ${contentPreview}
+                        `;
+                    } else {
+                        sourceContent = row.source || 'N/A';
+                    }
+                    
+                    // Create expandable response cell
+                    let responseContent;
+                    if (row.model_response_needs_expand) {
+                        responseContent = `
+                            <div class="short-text">${row.model_response_short}</div>
+                            <div class="full-text" style="display: none;">${row.model_response_full}</div>
+                            <button class="expand-btn" type="button">Show More</button>
+                        `;
+                    } else {
+                        responseContent = row.model_response_full || 'N/A';
+                    }
+                    
+                    html += `
+                        <tr class="${flaggedClass}">
+                            <td>${row.category || 'N/A'}</td>
+                            <td>${row.subcategory || 'N/A'}</td>
+                            <td class="source-cell">${sourceContent}</td>
+                            <td>${row.model || 'N/A'}</td>
+                            <td>${row.date || 'N/A'}</td>
+                            <td>${row.flagged === 1 ? '🚩 Yes' : '✅ No'}</td>
+                            <td class="response-cell">${responseContent}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                return html;
+            }
+        });
+    """

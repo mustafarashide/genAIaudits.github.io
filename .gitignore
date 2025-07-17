@@ -1,0 +1,44 @@
+# ignore virtual environment
+.venv
+venv
+
+# ignore intermediate requirements
+requirements.txt
+
+# ignore pycharm setting
+.idea
+
+# ignore api key
+llm_eval/config.json
+responses_collection/api_config.json
+translate/config.json
+
+#cached py
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# file run on windows to run
+OpenAI_ME/win1.py
+OpenAI_ME/winUtil.py
+
+# Cursor specific
+.cursorignore
+.cursor/
+.cursor-cache/
+.cursorrules
+
+# Apple feature
+.DS_Store
+
+# Intermediate Data
+data/raw_data
+data/response_data
+data/processed/processed_responses_may.csv
+data/processed/processed_responses_w_na_revisionID.csv
+visualization/poster_summary/stats_test.csv
+data/processed/processed_content_april.csv
+
+# HTML output
+front_end_pipeline/html_output/
+
