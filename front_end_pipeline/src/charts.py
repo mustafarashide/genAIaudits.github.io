@@ -14,6 +14,29 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
     Returns:
         Plotly Figure object
     """
+    # Handle empty DataFrame
+    if df.empty:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No data available",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, 
+            showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(
+            title="",
+            xaxis_title="Date",
+            yaxis_title="Flagged Rate (%)",
+            font=dict(family="Arial, sans-serif", size=12),
+            height=600,
+            paper_bgcolor='white',
+            plot_bgcolor='white',
+        )
+        # Remove x-axis ticks
+        fig.update_xaxes(showticklabels=False)
+        return fig
+    
     # Prepare data for charting
     chart_data = _prepare_chart_data(df)
     

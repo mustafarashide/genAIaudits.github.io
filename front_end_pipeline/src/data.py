@@ -45,7 +45,7 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
         dataset_type: Dataset type
     
     Returns:
-        List of DataFrames from matching CSV files
+        List of DataFrames from matching CSV files (empty list if no files found)
     """
     # Map API to model names
     api_to_models = {
@@ -80,7 +80,8 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
                     all_csv_files.append(file_path)
     
     if not all_csv_files:
-        raise FileNotFoundError(f"No CSV files found for API '{API}' with dataset type '{dataset_type}' in {data_path}")
+        print(f"Warning: No CSV files found for API '{API}' with dataset type '{dataset_type}' in {data_path}")
+        return []  # Return empty list instead of raising error
     
     dataframes = []
     for file_path in all_csv_files:
@@ -148,13 +149,19 @@ def _validate_and_concatenate(dataframes: List[pd.DataFrame]) -> pd.DataFrame:
         dataframes: List of DataFrames to validate and concatenate
     
     Returns:
-        Concatenated and validated DataFrame
+        Concatenated and validated DataFrame (empty if no dataframes)
     
     Raises:
         ValueError: If validation fails
     """
     if not dataframes:
-        raise ValueError("No dataframes to validate")
+        # Return empty DataFrame with expected columns
+        empty_df = pd.DataFrame(columns=[
+            'category', 'subcategory', 'source', 'permanent_link', 
+            'content', 'model', 'date', 'flagged', 'model_response'
+        ])
+        empty_df['date'] = pd.to_datetime(empty_df['date'])
+        return empty_df
     
     # Required columns
     required_columns = ['category', 'subcategory', 'source', 'model', 'date', 'flagged', 'model_response']

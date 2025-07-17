@@ -37,14 +37,14 @@ def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
         chart_id = f"chart_{i}"
         
         # Modify figure properties
-        '''fig.update_layout(
-            showlegend=(i == 0),  # Only show legend for first chart
+        fig.update_layout(
+            # showlegend=(i == 0),  # Only show legend for first chart
             yaxis=dict(
                 range=y_range,  # Use consistent y-axis range
                 tickformat=".1f"
             ),
             margin=dict(l=50, r=30, t=50, b=50)  # Tighter margins for smaller charts
-        )'''
+        )
         
         # Convert Plotly figure to HTML
         if i == 0:
@@ -109,6 +109,7 @@ def _render_template(template_vars: Dict) -> str:
         </div>
         <div class="instructions">
             <p>💡 Click on any category point in the charts OR click on legend items to view detailed data for that category</p>
+            <p> For TV-Movie Moderation Trend, please see <a href="tv_movie_05-25.html">this page</a>.</p>
         </div>
     </header>
 

@@ -8,7 +8,7 @@ from front_end_pipeline.src.html import generate_dashboard_html
 def run_pipeline():
     # Load data
     df_openaiME_wiki = load_data("openai-me", "wiki")
-    df_openaiGPT_wiki = load_data("deepseek", "wiki") # Placeholder for OpenAI GPT data
+    df_openaiGPT_wiki = load_data("openai-gpt", "wiki") # Currently No data 
     df_deepseek_wiki = load_data("deepseek", "wiki")
     df_deepseek_cn_wiki = load_data("deepseek", "cn-wiki")
 
@@ -20,7 +20,7 @@ def run_pipeline():
 
     # Name titles for plots
     title_openaiME_wiki = "OpenAI Moderation Endpoint Wikipedia Moderation Trends"
-    title_openaiGPT_wiki = "OpenAI GPT4.1 Wikipedia Moderation Trends (Placeholder with test data)"
+    title_openaiGPT_wiki = "OpenAI GPT4.1 Wikipedia Moderation Trends"
     title_deepseek_wiki = "DeepSeek Chat Wikipedia Moderation Trends"
     title_deepseek_cn_wiki = "DeepSeek Chat Chinese Translated Wikipedia Moderation Trends"
 
