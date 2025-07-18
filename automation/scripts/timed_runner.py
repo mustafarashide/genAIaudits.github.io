@@ -5,6 +5,8 @@ import threading
 from typing import Optional
 from pathlib import Path
 from datetime import datetime, timezone
+from front_end_pipeline.pipeline import run_pipeline  # Import the pipeline function
+import os
 
 class PipelineRunner:
     def __init__(self, api_type: str):
@@ -104,7 +106,7 @@ class PipelineRunner:
                     
                     # Start the subprocess
                     self.current_process = subprocess.Popen(
-                        ['python', '/home/h302/llm-speech-monitor-core/responses_collection/main.py', '--api', self.api_type, '--dataset', dataset],
+                        ['python', '/home/david/genAIaudits.github.io/responses_collection/main.py', '--api', self.api_type, '--dataset', dataset],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         text=True
@@ -129,10 +131,15 @@ class PipelineRunner:
                     # Successful run
                     if return_code == 0:
                         self._log_with_timestamp(f"✅ {dataset} dataset completed successfully for {self.api_type}")
-                        # Print the output
-                        if combined_output:
-                            self._log_with_timestamp(f"{dataset} dataset output:")
-                            print(combined_output, flush=True)
+                        
+                        # Run visualization update script
+                        run_pipeline()
+
+                        # Run command git add . git commit -m "Update visualizations" git push
+                        os.system("git add .")
+                        os.system('git commit -m "Update visualizations"')
+                        os.system("git pull --rebase")
+                        os.system("git push")
 
                         if self.api_type.lower() != 'deepseek':
                             return True  # Skip further attempts for other APIs

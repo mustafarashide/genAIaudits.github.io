@@ -7,4 +7,4 @@ cd "$(dirname "$0")/../.."
 source .venv/bin/activate
 
 # Run the pipeline
-python3 automation/scripts/timed_runner.py openai-me
+python3 -m automation.scripts.timed_runner openai-me
