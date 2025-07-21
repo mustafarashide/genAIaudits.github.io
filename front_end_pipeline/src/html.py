@@ -124,7 +124,10 @@ def _render_template(template_vars: Dict) -> str:
               They might do this so you don't see overly violent or sexual content, or for
               other reasons including based on legal or political considerations. Based on
               <a href="https://www.pewresearch.org/topics/">Pew Research Center topics</a>
-              and augmented with Chinese Sensitive Topics, the below
+              and augmented with
+              <a
+              href="https://www.cambridge.org/core/journals/perspectives-on-politics/article/censoring-the-intellectual-public-space-in-china-what-topics-are-not-allowed-and-who-gets-blacklisted/B5774AC7925D68814C989326EC3AE36B">Chinese
+              Sensitive Topics</a>, the below
               charts let you explore what social issues are flagged by OpenAI and DeepSeek.
               The data and code behind these charts is available on our
               <a href="https://github.com/genAIaudits/genAIaudits.github.io">GitHub</a> page.</p>
