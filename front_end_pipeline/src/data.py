@@ -126,6 +126,8 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
             # Extract useful model response information
             if API == "openai-me":
                 df['model_response'] = df['model_response'].apply(_extract_openaiME_response)
+            elif API == "openai-gpt":
+                df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
             elif API == "deepseek":
                 df['model_response'] = df['model_response'].apply(_extract_deepseek_response)
 
@@ -283,8 +285,52 @@ def _extract_deepseek_response(x):
             return str(x)    
     # If it's neither dict nor string, raise error
     raise ValueError(f"Deepseek response must be dict or string, got {type(x)}: {x}")
+def _extract_openai_gpt_response(x):
+    """Extract content from OpenAI GPT batch response structure."""
+    # Convert to string first to check for error patterns
+    str_response = str(x).lower()
+    
+    if "error code" in str_response:
+        return str(x)  # Return error as-is
+    
+    # If it's already a dict, try to extract
+    if isinstance(x, dict):
+        try:
+            return x['response']['body']['choices'][0]['message']['content']
+        except (KeyError, IndexError, TypeError) as e:
+            raise ValueError(f"Failed to extract OpenAI GPT response from dict: {e}. Response: {x}")
+    
+    # If it's a string, try multiple parsing methods
+    if isinstance(x, str):
+        # Method 1: Try JSON parsing first
+        try:
+            x_dict = json.loads(x)
+            return x_dict['response']['body']['choices'][0]['message']['content']
+        except (json.JSONDecodeError, KeyError, IndexError, TypeError):
+            pass  # Try next method
+        
+        # Method 2: Try eval() for Python dict-like strings (safer with ast.literal_eval)
+        try:
+            import ast
+            x_dict = ast.literal_eval(x)
+            return x_dict['response']['body']['choices'][0]['message']['content']
+        except (ValueError, SyntaxError, KeyError, IndexError, TypeError):
+            pass  # Try next method
+        
+        # Method 3: Try replacing single quotes with double quotes and parse as JSON
+        try:
+            # Replace single quotes with double quotes for JSON compatibility
+            json_str = x.replace("'", '"').replace('False', 'false').replace('True', 'true').replace('None', 'null')
+            x_dict = json.loads(json_str)
+            return x_dict['response']['body']['choices'][0]['message']['content']
+        except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
+            return str(x)    
+    
+    # If it's neither dict nor string, raise error
+    raise ValueError(f"OpenAI GPT response must be dict or string, got {type(x)}: {x}")
     
 if __name__ == "__main__":
-    test_df = load_data("openai-gpt", "cn-wiki")
+    test_df = load_data("openai-gpt", "wiki")
     print(f"Loaded files: {test_df.shape[0]} rows, {test_df.shape[1]} columns")
     print(test_df.columns)
+    print(test_df.model_response[0])
