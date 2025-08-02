@@ -127,6 +127,8 @@ class Pipeline:
         elif api_name == "openai-gpt":
             # OpenAI GPT requires content to be prefixed with "repeat after me:"
             dataset['content'] = dataset['content'].apply(lambda x: f"repeat after me: {x}")
+            # Select first 30000 characters for OpenAI GPT
+            dataset['content'] = dataset['content'].str.slice(0, 30000)
             return dataset
         elif api_name == "deepseek": 
             # Check if the dataset_type is 'cn-wiki' and modify content accordingly
