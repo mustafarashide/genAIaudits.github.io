@@ -8,7 +8,7 @@ from front_end_pipeline.src.html import generate_dashboard_html
 def run_pipeline():
     # Load data
     df_openaiME_wiki = load_data("openai-me", "wiki")
-    df_openaiGPT_wiki = load_data("openai-gpt", "wiki") # Currently No data 
+    df_openaiGPT_wiki = load_data("openai-gpt", "wiki")
     df_deepseek_wiki = load_data("deepseek", "wiki")
     df_deepseek_cn_wiki = load_data("deepseek", "cn-wiki")
 

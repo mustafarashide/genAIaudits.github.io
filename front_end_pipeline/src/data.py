@@ -333,4 +333,4 @@ if __name__ == "__main__":
     test_df = load_data("openai-gpt", "wiki")
     print(f"Loaded files: {test_df.shape[0]} rows, {test_df.shape[1]} columns")
     print(test_df.columns)
-    print(test_df.model_response[0])
+    print(test_df.model_response[1])

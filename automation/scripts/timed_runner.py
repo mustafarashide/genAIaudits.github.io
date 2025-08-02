@@ -144,9 +144,12 @@ class PipelineRunner:
                         if self.api_type.lower() != 'deepseek':
                             return True  # Skip further attempts for other APIs
                         
-                        # If DeepSeek cn-wiki is completed, proceed to wiki
-                        first_dataset_completed = True
-                        continue
+                        else: 
+                            if first_dataset_completed: # Completed both datasets
+                                return True
+                            else:  # Completed first dataset
+                                first_dataset_completed = True
+                                continue
                     
                     # Check if it was terminated due to discount time ending for DeepSeek
                     elif self.api_type.lower() == 'deepseek' and (return_code == -15 or return_code == -9):  # SIGTERM or SIGKILL
