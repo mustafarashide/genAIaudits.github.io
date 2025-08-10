@@ -363,7 +363,11 @@ class OpenAIBatchClient:
                                             "I can't comply with", 
                                             "I cannot repeat"]
                         flagged = 1 if any(pattern in model_response for pattern in refusal_patterns) else 0
-                    
+
+                        # Further check if response get flagged because of length phrases
+                        length_phrases = ["long", "length"]
+                        flagged = 2 if (any(phrase in model_response for phrase in length_phrases) and flagged == 1) else flagged
+
                     results.append({
                         "content_id": content_id,
                         "flagged": flagged,
@@ -515,6 +519,108 @@ class OpenAIBatchClient:
             self.log_print(f"Failed to list batches: {str(e)}")
             return []
 
+def test_process_dataset_with_gpt5():
+    """
+    Test the process_dataset function with GPT-5 model
+    """
+    # Get API key from config
+    try:
+        with open("responses_collection/api_config.json", "r") as f:
+            api_config = json.load(f)
+        api_key = api_config.get("openai_sorelle")
+        
+        if not api_key:
+            print("Error: API key not found in config")
+            return False
+    except FileNotFoundError:
+        print("Error: api_config.json not found")
+        return False
+    
+    # Initialize client with GPT-5
+    print("=== Testing OpenAI Batch Client with GPT-5 ===")
+    client = OpenAIBatchClient(api_key=api_key, model="gpt-5")
+    
+    # Create a small test dataset
+    test_data = [
+        {
+            "content_id": "test_001",
+            "content": "What is the capital of France?"
+        },
+        {
+            "content_id": "test_002", 
+            "content": "Explain the concept of machine learning in simple terms."
+        },
+        {
+            "content_id": "test_003",
+            "content": "Write a short poem about the ocean."
+        },
+        {
+            "content_id": "test_004",
+            "content": "How do you make a paper airplane?"
+        },
+        {
+            "content_id": "test_005",
+            "content": "What are the benefits of renewable energy?"
+        }
+    ]
+    
+    # Convert to DataFrame
+    test_df = pd.DataFrame(test_data)
+    
+    print(f"Created test dataset with {len(test_df)} items")
+    print("Test dataset contents:")
+    for _, row in test_df.iterrows():
+        print(f"  - {row['content_id']}: {row['content'][:50]}...")
+    
+    try:
+        # Process the dataset
+        print("\nStarting batch processing with GPT-5...")
+        results = client.process_dataset(test_df)
+        
+        # Validate results
+        print(f"\nProcessing completed! Got {len(results)} results")
+        
+        if len(results) != len(test_df):
+            print(f"Warning: Expected {len(test_df)} results, got {len(results)}")
+        
+        # Display results summary
+        for result in results:
+            
+            print(f"\nResult for {result['content_id']}:")
+            # Parse and display response snippet
+            try:
+                response_data = json.loads(result['model_response'])
+                if 'response' in response_data and 'body' in response_data['response']:
+                    content = response_data['response']['body']['choices'][0]['message']['content']
+                    print(f"  Response: {content[:100]}...")
+                else:
+                    print(f"  Raw response: {result['model_response'][:100]}...")
+            except:
+                print(f"  Raw response: {result['model_response'][:100]}...")
+        
+        print("\n✅ GPT-5 test completed successfully!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Test failed with error: {str(e)}")
+        client.log_print(f"Test error: {str(e)}")
+        return False
+        
+    except Exception as e:
+        print(f"❌ Token counting test failed: {str(e)}")
+        return False
+
+'''if __name__ == "__main__":
+    # Run both tests
+    print("Starting GPT-5 compatibility tests...\n")
+    
+    # Run full process_dataset test
+    process_test_passed = test_process_dataset_with_gpt5()
+        
+    if process_test_passed:
+        print("\n🎉 All GPT-5 tests passed! The batch client is compatible with GPT-5.")
+    else:
+        print("\n⚠️ process_dataset test failed. Check the logs for details.")'''
 
 if __name__ == "__main__":
     # Testing list_batches 
@@ -535,5 +641,5 @@ if __name__ == "__main__":
         client.log_print(f"ID: {batch['id']}, Status: {batch['status']}, Created At: {batch['created_at']}")
 
     # Cancel the a batch with ID
-    '''batch_id = "batch_68797491b5788190a0bbd7d1578fb66a"
-    client.cancel_batch(batch_id)'''
+    #batch_id = "batch_68797491b5788190a0bbd7d1578fb66a"
+    #client.cancel_batch(batch_id)

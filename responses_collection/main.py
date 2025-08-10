@@ -57,9 +57,9 @@ def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Run content moderation pipelines")
     parser.add_argument("--api", 
-                       choices=["openai-me", "openai-gpt", "deepseek"],
+                       choices=["openai-me", "openai-gpt4.1", "deepseek", "openai-gpt5"],
                        required=True,
-                       help="Which API pipeline to run: openai-me, openai-gpt, or deepseek")
+                       help="Which API pipeline to run: openai-me, openai-gpt4.1, deepseek, or openai-gpt5")
     parser.add_argument("--dataset", 
                        choices=["wiki", "tv-movie", "all", "cn-wiki"],
                        required=True,
@@ -87,12 +87,15 @@ def main():
         if args.api in ["openai-me"]:
             run_pipeline(dataset, "openai-me", config, dataset_type)
 
-        if args.api in ["openai-gpt"]:
-            run_pipeline(dataset, "openai-gpt", config, dataset_type)
+        if args.api in ["openai-gpt4.1"]:
+            run_pipeline(dataset, "openai-gpt4.1", config, dataset_type)
 
         if args.api in ["deepseek"]:
             run_pipeline(dataset, "deepseek", config, dataset_type)
-        
+
+        if args.api in ["openai-gpt5"]:
+            run_pipeline(dataset, "openai-gpt5", config, dataset_type)
+
     except Exception as e:
         print(f"\n❌ Fatal error: {str(e)}")
         sys.exit(1)

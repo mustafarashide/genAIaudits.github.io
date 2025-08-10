@@ -115,7 +115,7 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
         df
         .groupby(['date', 'category'], as_index=False)
         .agg({
-            'flagged': ['count', 'sum']
+            'flagged': ['count', lambda x: (x == 1).sum()]
         })
     )
     df_cat_rates.columns = ['date', 'category', 'total_count', 'flagged_count']
@@ -126,7 +126,7 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
         df
         .groupby(['date', 'category', 'subcategory'], as_index=False)
         .agg({
-            'flagged': ['count', 'sum']
+            'flagged': ['count', lambda x: (x == 1).sum()]
         })
     )
     df_sub_rates.columns = ['date', 'category', 'subcategory', 'total_count', 'flagged_count']

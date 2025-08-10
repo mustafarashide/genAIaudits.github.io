@@ -13,18 +13,19 @@ class Pipeline:
         self.config = config
         self.additional_sleep = config.get("additional_sleep", 3)  # Default additional sleep time
         self.max_retries = config.get("max_retries", 10)  # Default max retries
-        
+        self.lengthy_refusal_truncation = config["openai-gpt4.1"].get("lengthy_refusal_truncation", 30000)  # Default truncation length in characters
+
         # API-specific initial sleep times based on rate limits
         self.init_sleep_times = {
             "openai-me": 1/ config["openai-me"]["rate_limit"],  # OpenAI ME rate limit: 4 requests/second
-            "openai-gpt": 1/ config["openai-gpt"]["rate_limit"],  # OpenAI GPT rate limit: 60 requests/second
+            "openai-gpt4.1": 1/ config["openai-gpt4.1"]["rate_limit"],  # OpenAI GPT-4.1 rate limit: 60 requests/second
             "deepseek": 1/ config["deepseek"]["rate_limit"]  # Deepseek rate limit: 10 requests/second
         }
 
         # API-specific batch sizes 
         self.batch_size = {
             "openai-me": config["openai-me"]["batch_size"],
-            "openai-gpt": config["openai-gpt"]["batch_size"],
+            "openai-gpt4.1": config["openai-gpt4.1"]["batch_size"],
             "deepseek": config["deepseek"]["batch_size"]
         }
         
@@ -72,7 +73,7 @@ class Pipeline:
         # Setup logger for this run
         logger = self._setup_logger(api_name, dataset_type)
         
-        if api_name not in ["openai-me", "deepseek", "openai-gpt"]:
+        if api_name not in ["openai-me", "deepseek", "openai-gpt4.1", "openai-gpt5"]:
             error_msg = f"Unknown API: {api_name}"
             logger.error(error_msg)
             raise ValueError(error_msg)
@@ -105,7 +106,22 @@ class Pipeline:
         self._log_and_print(msg, logger)
         
         # 3. Validate and clean responses
-        validated_data = self._validate_responses(response_data, dataset, logger)
+        is_rerun = False
+        validated_data, exit_code = self._validate_responses(response_data, dataset, logger, is_rerun)
+
+        # If validation fails and we need to rerun for lengthy refusals
+        if exit_code == 1 and validated_data is None:
+            response_data = self._process_in_batches(
+                dataset=prepared_data,
+                temp_file=temp_file,
+                api_name=api_name,
+                init_sleep=self.init_sleep_times[api_name],
+                additional_sleep=self.additional_sleep,
+                max_retries=self.max_retries,
+                logger=logger
+            )
+            is_rerun = True
+            validated_data, exit_code = self._validate_responses(response_data, dataset, logger, is_rerun)
         msg = f"✓ Response validation completed for {api_name}"
         self._log_and_print(msg, logger)
         
@@ -124,11 +140,9 @@ class Pipeline:
         """Prepare data based on API requirements"""
         if api_name == "openai-me":
             return dataset  # OpenAI-ME does not require special formatting
-        elif api_name == "openai-gpt":
-            # OpenAI GPT requires content to be prefixed with "repeat after me:"
+        elif api_name == "openai-gpt4.1" or api_name == "openai-gpt5":
+            # OpenAI GPT-4.1 and GPT-5 requires content to be prefixed with "repeat after me:"
             dataset['content'] = dataset['content'].apply(lambda x: f"repeat after me: {x}")
-            # Select first 30000 characters for OpenAI GPT
-            dataset['content'] = dataset['content'].str.slice(0, 30000)
             return dataset
         elif api_name == "deepseek": 
             # Check if the dataset_type is 'cn-wiki' and modify content accordingly
@@ -156,10 +170,13 @@ class Pipeline:
         
         # Check for existing progress
         processed_ids = set()
+        lengthy_refusals_ids = set()
         if temp_file.exists():
             existing_data = pd.read_csv(temp_file)
-            # Only consider IDs where flagged is not -1
-            valid_processed = existing_data[existing_data['flagged'] != -1]
+            # Only consider IDs where flagged is not -1 or 2 (for lengthy refusals)
+            valid_processed = existing_data[(existing_data['flagged'] != -1) & (existing_data['flagged'] != 2)]
+            lengthy_refusals = existing_data[existing_data['flagged'] == 2]
+            lengthy_refusals_ids = set(lengthy_refusals['content_id'])
             processed_ids = set(valid_processed['content_id'])
             msg = f"Found {len(processed_ids)} previously processed items"
             self._log_and_print(msg, logger)
@@ -180,7 +197,13 @@ class Pipeline:
         for i in range(0, len(remaining_ids), batch_size):
             batch_ids = remaining_ids[i:i + batch_size]
             batch = dataset[dataset['content_id'].isin(batch_ids)].copy().drop_duplicates(subset=['content_id'])
-            
+
+            # Check if batch contains any lengthy refusals, if so, shorten it 
+            mask = batch['content_id'].isin(lengthy_refusals_ids)
+            batch.loc[mask, 'content'] = batch.loc[mask, 'content'].str[:self.lengthy_refusal_truncation]
+            msg = f"found {len(batch[mask])} lengthy refusals in batch, shortening content to {self.lengthy_refusal_truncation} chars"
+            self._log_and_print(msg, logger)
+
             try:
                 # Process batch through API with retry parameters
                 processed_batch = self._call_api(
@@ -222,12 +245,19 @@ class Pipeline:
             client = OpenAIClient(self.config["openai-me"]["api_key"])
         elif api_name == "deepseek":
             client = DeepseekClient(self.config["deepseek"]["api_key"])
-        elif api_name == "openai-gpt":
-            # Use OpenAI GPT batch client for processing
+        elif api_name == "openai-gpt4.1":
+            # Use OpenAI GPT-4.1 batch client for processing
             client = OpenAIBatchClient(
-                api_key=self.config["openai-gpt"]["api_key"],
-                model=self.config["openai-gpt"]["model"],
-                endpoint=self.config["openai-gpt"]["endpoint"]
+                api_key=self.config["openai-gpt4.1"]["api_key"],
+                model=self.config["openai-gpt4.1"]["model"],
+                endpoint=self.config["openai-gpt4.1"]["endpoint"]
+            )
+        elif api_name == "openai-gpt5":
+            # Use OpenAI GPT-5 batch client for processing
+            client = OpenAIBatchClient(
+                api_key=self.config["openai-gpt5"]["api_key"],
+                model=self.config["openai-gpt5"]["model"],
+                endpoint=self.config["openai-gpt5"]["endpoint"]
             )
         else:
             raise ValueError(f"Unknown API: {api_name}")
@@ -238,7 +268,7 @@ class Pipeline:
         results = []
 
         # If using OpenAI GPT batch client, process the entire batch at once
-        if api_name == "openai-gpt":
+        if api_name == "openai-gpt4.1" or api_name == "openai-gpt5":
             results = client.process_dataset(batch)
             time.sleep(300)  # sleep for 5 minutes after processing a batch
             return pd.DataFrame(results)
@@ -271,8 +301,8 @@ class Pipeline:
                     mode='a', 
                     header=not temp_file.exists(), 
                     index=False)
-    
-    def _validate_responses(self, df: pd.DataFrame, content_dataset: pd.DataFrame, logger: logging.Logger) -> pd.DataFrame:
+
+    def _validate_responses(self, df: pd.DataFrame, content_dataset: pd.DataFrame, logger: logging.Logger, is_rerun: bool) -> pd.DataFrame:
         """
         Validate API responses against original dataset.
         
@@ -280,7 +310,8 @@ class Pipeline:
             df: Response data from API calls
             content_dataset: Original input dataset
             logger: Logger instance
-            
+            is_rerun: Flag indicating if this is a rerun
+
         Returns:
             Validated and deduplicated DataFrame
             
@@ -299,6 +330,12 @@ class Pipeline:
                 error_msg = "Some responses have invalid 'flagged' status (-1)"
                 logger.error(error_msg)
                 raise ValueError(error_msg)
+            
+            # Check for lengthy refusals when rerun is False
+            if (df['flagged'] == 2).any() and not is_rerun:
+                # Run the pipeline again for lengthy refusals
+                exit_code = 1
+                return None, exit_code
 
             # Get content ID sets
             expected_ids = set(content_dataset['content_id'])
@@ -321,8 +358,9 @@ class Pipeline:
             # Remove duplicates keeping latest version
             deduped_df = df.drop_duplicates(subset=['content_id'], keep='last')         
             msg = f"✓ Validation passed: {len(deduped_df)} unique responses"
+            exit_code = 0
             self._log_and_print(msg, logger)
-            return deduped_df
+            return deduped_df, exit_code
             
         except Exception as e:
             error_msg = f"❌ Validation failed: {str(e)}"

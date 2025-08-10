@@ -9,17 +9,23 @@ refusal_patterns = ["I'm sorry, but",
                     "I can't repeat", 
                     "I can't comply with", 
                     "I cannot repeat"]
-length_phrase = ["long", "length", "entire", "too much"]
+length_phrase = ["long", "length"]
 
 # Check responses continaing flagged_phrase and at least one of the length phrases
 df_openaiGPT_wiki['model_response'] = df_openaiGPT_wiki['model_response'].astype(str)
 df_openaiGPT_wiki['contains_flagged'] = df_openaiGPT_wiki['model_response'].str.contains('|'.join(refusal_patterns), case=False)
 gpt_flagged = df_openaiGPT_wiki[df_openaiGPT_wiki['contains_flagged']]
+
+# Save to csv for manual review
+gpt_flagged.to_csv("responses_collection/refusal_pattern/gpt_cleaned_flagged_w_content.csv", index=False)
 gpt_flagged['contains_length'] = gpt_flagged['model_response'].str.contains('|'.join(length_phrase), case=False)
 print(gpt_flagged['contains_length'].value_counts())
 
 # Calculate average content lengths
 flagged_with_length = gpt_flagged[gpt_flagged['contains_length'] == True]
+
+# Save flagged responses with length phrases to csv for manual review
+flagged_with_length.to_csv("responses_collection/refusal_pattern/gpt_flagged_with_length.csv", index=False)
 flagged_without_length = gpt_flagged[gpt_flagged['contains_length'] == False]
 
 # Calculate content lengths

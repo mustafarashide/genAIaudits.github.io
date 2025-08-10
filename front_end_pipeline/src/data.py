@@ -176,11 +176,11 @@ def _validate_and_concatenate(dataframes: List[pd.DataFrame]) -> pd.DataFrame:
     
     # Concatenate all dataframes
     combined_df = pd.concat(dataframes, ignore_index=True)
-    
-    # Validate flagged column contains only 0/1
-    if not combined_df['flagged'].isin([0, 1]).all():
-        raise ValueError("'flagged' column must contain only 0 or 1 values")
-    
+
+    # Validate flagged column contains only 0/1/2
+    if not combined_df['flagged'].isin([0, 1, 2]).all():
+        raise ValueError("'flagged' column must contain only 0, 1, or 2 values")
+
     # Convert date column to datetime
     try:
         combined_df['date'] = pd.to_datetime(combined_df['date'])
