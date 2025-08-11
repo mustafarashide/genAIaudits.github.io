@@ -9,13 +9,13 @@ import pandas as pd
 import tiktoken  # Add this import for token counting
 
 class OpenAIBatchClient:
-    def __init__(self, api_key: str, model: str = "gpt-4.1", endpoint: str = "/v1/chat/completions"):
+    def __init__(self, api_key: str, model: str, endpoint: str = "/v1/chat/completions"):
         """
         Initialize OpenAI Batch Client
         
         Args:
             api_key: OpenAI API key
-            model: Model to use for batch processing (GPT-4.1)
+            model: Model to use for batch processing 
             endpoint: API endpoint for batch requests
         """
         self.client = OpenAI(api_key=api_key)
@@ -388,7 +388,11 @@ class OpenAIBatchClient:
                         custom_id = error_data["custom_id"]
                         content_id = custom_id.replace("request-", "")
                         model_response = json.dumps(error_data)
-                        flagged = -1
+                        # If error is due to API moderation, flag as 1, else -1
+                        if "safety reason" in model_response.lower():
+                            flagged = 1
+                        else:
+                            flagged = -1
 
                         results.append({
                             "content_id": content_id,
@@ -475,7 +479,7 @@ class OpenAIBatchClient:
                 if batch_file_path.exists():
                     batch_file_path.unlink()
                     self.log_print(f"Removed batch file: {batch_file_path}")
-                
+                    
                 return results
             
         except Exception as e:
