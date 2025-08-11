@@ -19,6 +19,7 @@ class Pipeline:
         self.init_sleep_times = {
             "openai-me": 1/ config["openai-me"]["rate_limit"],  # OpenAI ME rate limit: 4 requests/second
             "openai-gpt4.1": 1/ config["openai-gpt4.1"]["rate_limit"],  # OpenAI GPT-4.1 rate limit: 60 requests/second
+            "openai-gpt5": 1/ config["openai-gpt5"]["rate_limit"],  # OpenAI GPT-5 rate limit: 60 requests/second
             "deepseek": 1/ config["deepseek"]["rate_limit"]  # Deepseek rate limit: 10 requests/second
         }
 
@@ -26,6 +27,7 @@ class Pipeline:
         self.batch_size = {
             "openai-me": config["openai-me"]["batch_size"],
             "openai-gpt4.1": config["openai-gpt4.1"]["batch_size"],
+            "openai-gpt5": config["openai-gpt5"]["batch_size"],
             "deepseek": config["deepseek"]["batch_size"]
         }
         
@@ -167,7 +169,7 @@ class Pipeline:
         # Get all unique content IDs sorted by category, subcategory, content_id
         dataset_sorted = dataset.drop_duplicates(subset=['content_id']).sort_values(['category', 'subcategory', 'content_id'])
         all_content_ids = dataset_sorted['content_id'].tolist()
-        
+
         # Check for existing progress
         processed_ids = set()
         lengthy_refusals_ids = set()

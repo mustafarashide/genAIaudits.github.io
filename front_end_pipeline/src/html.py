@@ -66,29 +66,39 @@ def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
 
         # Prepare dataframe for JavaScript (all data, both flagged and not flagged)
         df_for_js = df.copy()
-        df_for_js['date'] = df_for_js['date'].dt.strftime('%Y-%m-%d') if pd.api.types.is_datetime64_any_dtype(df_for_js['date']) else df_for_js['date']
-        # Add truncated info for flag == 2
-        df_for_js['content'] = df_for_js.apply(
-            lambda row: 'TRUNCATED TO FIRST 30,000 CHARS: ' + row['content'][:300] + '...' if row['flagged'] == 2 
-            else row['content'][:300] + '...' if len(row['content']) > 300 else row['content'],
-            axis=1
-        )
-        # Handle model_response_full based on flagged status
-        df_for_js['model_response_full'] = df_for_js.apply(
-            lambda row: row['model_response'] if row['flagged'] != 0 
-            else (str(row['model_response'])[:300] + '...' if len(str(row['model_response'])) > 300 else str(row['model_response'])),
-            axis=1
-        )
-        df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 100
-        # Sort by flagged status (1, 2, 0) then by date
-        df_for_js['sort_order'] = df_for_js['flagged'].map({1: 1, 2: 2, 0: 3})
-        df_for_js = df_for_js.sort_values(by=['sort_order', 'date'], ascending=[True, False])
-        df_for_js = df_for_js.drop(columns=['sort_order'])
+        
+        # Handle empty dataframe case
+        if df_for_js.empty:
+            chart_data[title] = []
+        else:
+            df_for_js['date'] = df_for_js['date'].dt.strftime('%Y-%m-%d') if pd.api.types.is_datetime64_any_dtype(df_for_js['date']) else df_for_js['date']
+            
+            # Add truncated info for flag == 2
+            df_for_js['content'] = df_for_js.apply(
+                lambda row: 'TRUNCATED TO FIRST 30,000 CHARS: ' + row['content'][:300] + '...' if row['flagged'] == 2 
+                else row['content'][:300] + '...' if len(row['content']) > 300 else row['content'],
+                axis=1
+            )
+            
+            # Handle model_response_full based on flagged status
+            df_for_js['model_response_full'] = df_for_js.apply(
+                lambda row: row['model_response'] if row['flagged'] != 0 
+                else (str(row['model_response'])[:300] + '...' if len(str(row['model_response'])) > 300 else str(row['model_response'])),
+                axis=1
+            )
+            
+            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 100
+            
+            # Sort by flagged status (1, 2, 0) then by date
+            df_for_js['sort_order'] = df_for_js['flagged'].map({1: 1, 2: 2, 0: 3})
+            df_for_js = df_for_js.sort_values(by=['sort_order', 'date'], ascending=[True, False])
+            df_for_js = df_for_js.drop(columns=['sort_order'])
 
-        # drop model_response column for size optimization
-        if 'model_response' in df_for_js.columns:
-            df_for_js = df_for_js.drop(columns=['model_response'])
-        chart_data[title] = df_for_js.to_dict('records')
+            # drop model_response column for size optimization
+            if 'model_response' in df_for_js.columns:
+                df_for_js = df_for_js.drop(columns=['model_response'])
+            
+            chart_data[title] = df_for_js.to_dict('records')
 
     # Template variables
     template_vars = {
