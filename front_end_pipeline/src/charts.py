@@ -161,7 +161,7 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 if __name__ == "__main__":
-    me_data = load_data("deepseek", "cn-wiki")
+    me_data = load_data("openai-gpt-5", "wiki")
     print(me_data['date'].value_counts())
-    fig = create_trends_chart(me_data, title="DeepSeek Moderation Endpoint Flagging Trends by Category")
+    fig = create_trends_chart(me_data)
     fig.show()

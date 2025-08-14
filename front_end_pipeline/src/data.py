@@ -20,7 +20,7 @@ def load_data(API: str, dataset_type: str, data_path: str = "data/processed/hist
         Validated and concatenated DataFrame
     """
     # Validate API and dataset_type
-    valid_APIs = ["openai-me", "openai-gpt", "deepseek"]
+    valid_APIs = ["openai-me", "openai-gpt", "deepseek", "openai-gpt-5"]
     if API not in valid_APIs:
         raise ValueError(f"Invalid API: {API}. Must be one of {valid_APIs}")
     
@@ -51,6 +51,7 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
     api_to_models = {
         "openai-me": ["omni-moderation-latest", "text-moderation-007"],
         "openai-gpt": ["gpt-4.1"],
+        "openai-gpt-5": ["gpt-5"],
         "deepseek": ["deepseek-chat"]
     }
     
