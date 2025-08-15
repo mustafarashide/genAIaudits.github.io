@@ -28,7 +28,7 @@ config = {
         "rate_limit": 4,
         "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
         "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt41}.csv"),
-        "max_tokens_per_day": 850000,  # 900k words per day for OpenAI GPT-4.1 (for safety, cap at 850k)
+        "max_tokens_per_day": 90000000,  # keep at min for long context, tier 4, 100,000,000 tokens per batch
         "batch_size": 100,
         "lengthy_refusal_truncation": 19000  # Truncate to 19000 characters for lengthy refusals (median of wiki)
     },
@@ -39,7 +39,7 @@ config = {
         "rate_limit": 4,
         "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
         "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt5}.csv"),
-        "max_tokens_per_day": 850000,  # 900k words per day for OpenAI GPT-5 (for safety, cap at 850k)
+        "max_tokens_per_day": 190000000,  # tier 4 has 200,000,000 tokens per day; refer to https://platform.openai.com/docs/models/gpt-5
         "batch_size": 100,
         "lengthy_refusal_truncation": 19000  # Truncate to 19000 characters for lengthy refusals (median of wiki)
     },

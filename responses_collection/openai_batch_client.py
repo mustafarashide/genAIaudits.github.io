@@ -34,7 +34,7 @@ class OpenAIBatchClient:
             "completion_window": "24h",
             "max_requests_per_batch": 50000,
             "max_file_size_mb": 200,
-            "max_tokens_per_batch": 900000,  # Add token limit
+            "max_tokens_per_batch": 90000000, # tier 4 for gpt-4.1, 100,000,000 tokens per batch
             "batch_sleep_seconds": 600,  # 10 minutes between batches
             "poll_interval_seconds": 300,  # 5 minutes for testing
             "batch_dir": "responses_collection/batch_files",
@@ -365,8 +365,9 @@ class OpenAIBatchClient:
                         flagged = 1 if any(pattern in model_response for pattern in refusal_patterns) else 0
 
                         # Further check if response get flagged because of length phrases
-                        length_phrases = ["very long passage", "that long passage",
-                          "passage is very long", "passage is too long"]
+                        length_phrases = ["very long passage", "is very long",
+                          "that long passage",
+                           "is too long to"]
                         flagged = 2 if any(phrase in model_response for phrase in length_phrases) else flagged
 
                     results.append({
@@ -390,7 +391,7 @@ class OpenAIBatchClient:
                         content_id = custom_id.replace("request-", "")
                         model_response = json.dumps(error_data)
                         # If error is due to API moderation, flag as 1, else -1
-                        if "safety reason" in model_response.lower():
+                        if "Invalid prompt: we've limited access to this content for safety reasons." in model_response.lower():
                             flagged = 1
                         else:
                             flagged = -1

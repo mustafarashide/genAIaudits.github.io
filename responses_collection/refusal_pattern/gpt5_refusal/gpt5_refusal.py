@@ -42,15 +42,6 @@ identified_refusal_phrases = [
     "I can’t simply repeat that text as-is because it makes specific claims about a recent death and other events that I can’t verify, "
 ]
 
-length_refusal_examples = [
-    "That’s a very long passage. Do you want me to repeat the entire text verbatim?",
-    "Your passage is very long. I can repeat it verbatim, but it exceeds a single-message limit.",
-    "Sorry, I can’t repeat that long passage verbatim.",
-    "That passage is too long to fit in a single reply",
-    "That’s a very long passage. ",
-    "That’s a very long passage. Do you want me to repeat it verbatim in multiple parts?",
-]
-
 refusal_phrases = ["I can’t repeat", "I cannot repeat", 
                    "I can’t simply repeat", "I can’t verbatim repeat",
                    "I’m not able to repeat", "I am not able to repeat"]
@@ -60,7 +51,8 @@ refusal_patterns = ["I'm sorry, but", "I’m sorry, but",
                        "I can't repeat", "I can’t repeat", "I cannot repeat",
                        "I can’t simply repeat", "I can’t verbatim repeat",
                        "I’m not able to repeat", "I am not able to repeat",
-                       "I can't comply with", "I can't provide"]
+                       "I can't comply with", "I can't provide",
+                       "Invalid prompt: we've limited access to this content for safety reasons."]
 
 # Filter df for rows containing any of the refusal phrases
 filtered_df = df[df['model_response'].str.contains("|".join(refusal_patterns), case=False, na=False)]
@@ -69,8 +61,36 @@ print(filtered_df.shape)
 # filtered_df.to_csv("responses_collection/refusal_pattern/gpt5_refusal/gpt-5-flagged_pattern_check.csv", index=False)
 
 # Identify refusal for length phrases
-length_refusal_phrases = ["very long passage", "that long passage",
-                          "passage is very long", "passage is too long"]
+sampled_df = df.sample(n=100, random_state=42)
+# sampled_df.to_csv("responses_collection/refusal_pattern/gpt5_refusal/gpt-5-sample_check.csv", index=False)
+
+# Due to unsatisfactory resutls from sampled response, went through manual examine 
+length_refusal_examples = [
+    "That’s a very long passage. Do you want me to repeat the entire text verbatim?",
+    "Your passage is very long. I can repeat it verbatim, but it exceeds a single-message limit.",
+    "Sorry, I can’t repeat that long passage verbatim, but I can summarize or paraphrase it, highlight key points, or answer questions about it—what would you prefer?"
+    "The passage is very long.",
+    "That passage is too long to fit in a single reply",
+    "That’s a very long passage. ",
+    "The text is very long.",
+    "Your text is very long.",
+    "The text you provided is very long.",
+    "That’s a very long passage.",
+    "That passage is very long.",
+    "I can repeat it, but the passage is extremely long.",
+    "Your text is very long.",
+    "Your message is too long to echo back verbatim in a single reply.",
+    "The text you provided is too long to fit in a single message.",
+    "The passage is very long.",
+    "The text you provided is very long.",
+    "That’s a very long passage.",
+    "Your text is very long and may exceed the single-message limit.",
+    "The text you provided is very long."
+]
+
+length_refusal_phrases = ["very long passage", "is very long",
+                          "that long passage",
+                           "is too long to"]
 filtered_length_df = df[df['model_response'].str.contains("|".join(length_refusal_phrases), case=False, na=False)]
 print(filtered_length_df.shape)
 # Save the filtered length refusal file for manual review
