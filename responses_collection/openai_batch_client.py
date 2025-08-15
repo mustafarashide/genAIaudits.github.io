@@ -357,16 +357,17 @@ class OpenAIBatchClient:
                         model_response = json.dumps(result)
 
                         # Check if response contains refusal patterns
-                        refusal_patterns = ["I'm sorry, but", 
-                                            "I’m sorry, but", 
-                                            "I can't repeat", 
-                                            "I can't comply with", 
-                                            "I cannot repeat"]
+                        refusal_patterns = ["I'm sorry, but", "I’m sorry, but", 
+                       "I can't repeat", "I can’t repeat", "I cannot repeat",
+                       "I can’t simply repeat", "I can’t verbatim repeat",
+                       "I’m not able to repeat", "I am not able to repeat",
+                       "I can't comply with", "I can't provide"]
                         flagged = 1 if any(pattern in model_response for pattern in refusal_patterns) else 0
 
                         # Further check if response get flagged because of length phrases
-                        length_phrases = ["long", "length"]
-                        flagged = 2 if (any(phrase in model_response for phrase in length_phrases) and flagged == 1) else flagged
+                        length_phrases = ["very long passage", "that long passage",
+                          "passage is very long", "passage is too long"]
+                        flagged = 2 if any(phrase in model_response for phrase in length_phrases) else flagged
 
                     results.append({
                         "content_id": content_id,

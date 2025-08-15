@@ -30,7 +30,7 @@ config = {
         "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt41}.csv"),
         "max_tokens_per_day": 850000,  # 900k words per day for OpenAI GPT-4.1 (for safety, cap at 850k)
         "batch_size": 100,
-        "lengthy_refusal_truncation": 30000  # Truncate to 30000 characters for lengthy refusals
+        "lengthy_refusal_truncation": 19000  # Truncate to 19000 characters for lengthy refusals (median of wiki)
     },
     "openai-gpt5": {
         "api_key": openai_sorelle_api_key,
@@ -41,7 +41,7 @@ config = {
         "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt5}.csv"),
         "max_tokens_per_day": 850000,  # 900k words per day for OpenAI GPT-5 (for safety, cap at 850k)
         "batch_size": 100,
-        "lengthy_refusal_truncation": 30000  # Truncate to 30000 characters for lengthy refusals
+        "lengthy_refusal_truncation": 19000  # Truncate to 19000 characters for lengthy refusals (median of wiki)
     },
     "deepseek": {
         "api_key": deepseek_api_key,

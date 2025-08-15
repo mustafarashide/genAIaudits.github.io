@@ -13,7 +13,7 @@ class Pipeline:
         self.config = config
         self.additional_sleep = config.get("additional_sleep", 3)  # Default additional sleep time
         self.max_retries = config.get("max_retries", 10)  # Default max retries
-        self.lengthy_refusal_truncation = config["openai-gpt4.1"].get("lengthy_refusal_truncation", 30000)  # Default truncation length in characters
+        self.lengthy_refusal_truncation = config["openai-gpt4.1"].get("lengthy_refusal_truncation", 19000)  # Default truncation length in characters
 
         # API-specific initial sleep times based on rate limits
         self.init_sleep_times = {
