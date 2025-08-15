@@ -66,7 +66,7 @@ refusal_patterns = ["I'm sorry, but", "I’m sorry, but",
 filtered_df = df[df['model_response'].str.contains("|".join(refusal_patterns), case=False, na=False)]
 print(filtered_df.shape)
 # Save the filtered file for manual review
-filtered_df.to_csv("responses_collection/refusal_pattern/gpt5_refusal/gpt-5-flagged_pattern_check.csv", index=False)
+# filtered_df.to_csv("responses_collection/refusal_pattern/gpt5_refusal/gpt-5-flagged_pattern_check.csv", index=False)
 
 # Identify refusal for length phrases
 length_refusal_phrases = ["very long passage", "that long passage",
@@ -82,8 +82,16 @@ median_length = wiki_content['content'].str.len().median()
 print(f"Median length of wiki content: {median_length}")
 
 # Revise flagging label for first week of gpt-5 responses
-df['flagged'] = df['model_response'].apply(lambda x: 1 if any(phrase in x for phrase in refusal_patterns) else 0)
-df['flagged'] = df['model_response'].apply(lambda x: 2 if any(phrase in x for phrase in length_refusal_phrases) else 0)
+def assign_flag(text):
+    if any(phrase in text for phrase in length_refusal_phrases):
+        return 2
+    elif any(phrase in text for phrase in refusal_patterns):
+        return 1
+    else:
+        return 0
+
+df['flagged'] = df['model_response'].apply(assign_flag)
+print(df['flagged'].value_counts())
 
 # Save the revised content as gpt5_wiki_temp.csv for rerun on truncation
 # df.to_csv("data/processed/hist_response/gpt-5_wiki_temp.csv", index=False)
