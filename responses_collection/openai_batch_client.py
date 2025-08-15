@@ -36,7 +36,7 @@ class OpenAIBatchClient:
             "max_file_size_mb": 200,
             "max_tokens_per_batch": 900000,  # Add token limit
             "batch_sleep_seconds": 600,  # 10 minutes between batches
-            "poll_interval_seconds": 1200,  # 20 minutes for testing
+            "poll_interval_seconds": 300,  # 5 minutes for testing
             "batch_dir": "responses_collection/batch_files",
             "input_file_prefix": "batch_input",
             "output_file_prefix": "batch_output",
