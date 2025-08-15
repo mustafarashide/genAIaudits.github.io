@@ -11,23 +11,27 @@ def run_pipeline():
     df_openaiGPT_wiki = load_data("openai-gpt", "wiki")
     df_deepseek_wiki = load_data("deepseek", "wiki")
     df_deepseek_cn_wiki = load_data("deepseek", "cn-wiki")
+    df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
 
     # Create charts
     fig_openaiME_wiki = create_trends_chart(df_openaiME_wiki)
     fig_openaiGPT_wiki = create_trends_chart(df_openaiGPT_wiki)
     fig_deepseek_wiki = create_trends_chart(df_deepseek_wiki)
     fig_deepseek_cn_wiki = create_trends_chart(df_deepseek_cn_wiki)
+    fig_gpt5_wiki = create_trends_chart(df_gpt5_wiki)
 
     # Name titles for plots
     title_openaiME_wiki = "OpenAI Moderation Endpoint Wikipedia Moderation Trends"
     title_openaiGPT_wiki = "OpenAI GPT4.1 Wikipedia Moderation Trends"
     title_deepseek_wiki = "DeepSeek Chat Wikipedia Moderation Trends"
     title_deepseek_cn_wiki = "DeepSeek Chat Chinese Translated Wikipedia Moderation Trends"
+    title_gpt5_wiki = "OpenAI GPT-5 Wikipedia Moderation Trends"
 
     # Generate HTML output
     fig_input_dict = {
         title_openaiME_wiki: [fig_openaiME_wiki, df_openaiME_wiki],
-        title_openaiGPT_wiki: [fig_openaiGPT_wiki, df_openaiGPT_wiki],
+        # title_openaiGPT_wiki: [fig_openaiGPT_wiki, df_openaiGPT_wiki],
+        title_gpt5_wiki: [fig_gpt5_wiki, df_gpt5_wiki],
         title_deepseek_wiki: [fig_deepseek_wiki, df_deepseek_wiki],
         title_deepseek_cn_wiki: [fig_deepseek_cn_wiki, df_deepseek_cn_wiki],
     }
