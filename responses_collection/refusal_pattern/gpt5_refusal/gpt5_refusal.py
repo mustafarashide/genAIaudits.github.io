@@ -44,21 +44,14 @@ identified_refusal_phrases = [
 
 refusal_phrases = ["I can’t repeat", "I cannot repeat", 
                    "I can’t simply repeat", "I can’t verbatim repeat",
-                   "I’m not able to repeat", "I am not able to repeat"]
-
-# Union with gpt 4.1 refusal patterns
-refusal_patterns = ["I'm sorry, but", "I’m sorry, but", 
-                       "I can't repeat", "I can’t repeat", "I cannot repeat",
-                       "I can’t simply repeat", "I can’t verbatim repeat",
-                       "I’m not able to repeat", "I am not able to repeat",
-                       "I can't comply with", "I can't provide",
-                       "Invalid prompt: we've limited access to this content for safety reasons."]
+                   "I’m not able to repeat", "I am not able to repeat",
+                   "Invalid prompt: we've limited access to this content for safety reasons."]
 
 # Filter df for rows containing any of the refusal phrases
-filtered_df = df[df['model_response'].str.contains("|".join(refusal_patterns), case=False, na=False)]
+filtered_df = df[df['model_response'].str.contains("|".join(refusal_phrases), case=False, na=False)]
 print(filtered_df.shape)
 # Save the filtered file for manual review
-# filtered_df.to_csv("responses_collection/refusal_pattern/gpt5_refusal/gpt-5-flagged_pattern_check.csv", index=False)
+filtered_df.to_csv("responses_collection/refusal_pattern/gpt5_refusal/gpt-5-flagged_pattern_check.csv", index=False)
 
 # Identify refusal for length phrases
 sampled_df = df.sample(n=100, random_state=42)
@@ -105,7 +98,7 @@ print(f"Median length of wiki content: {median_length}")
 def assign_flag(text):
     if any(phrase in text for phrase in length_refusal_phrases):
         return 2
-    elif any(phrase in text for phrase in refusal_patterns):
+    elif any(phrase in text for phrase in refusal_phrases):
         return 1
     else:
         return 0

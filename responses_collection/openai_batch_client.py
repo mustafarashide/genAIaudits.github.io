@@ -356,19 +356,7 @@ class OpenAIBatchClient:
                         # Successful response
                         model_response = json.dumps(result)
 
-                        # Check if response contains refusal patterns
-                        refusal_patterns = ["I'm sorry, but", "I’m sorry, but", 
-                       "I can't repeat", "I can’t repeat", "I cannot repeat",
-                       "I can’t simply repeat", "I can’t verbatim repeat",
-                       "I’m not able to repeat", "I am not able to repeat",
-                       "I can't comply with", "I can't provide"]
-                        flagged = 1 if any(pattern in model_response for pattern in refusal_patterns) else 0
-
-                        # Further check if response get flagged because of length phrases
-                        length_phrases = ["very long passage", "is very long",
-                          "that long passage",
-                           "is too long to"]
-                        flagged = 2 if any(phrase in model_response for phrase in length_phrases) else flagged
+                        flagged = _extract_flagged_status(model_response, self.model)
 
                     results.append({
                         "content_id": content_id,
@@ -524,6 +512,100 @@ class OpenAIBatchClient:
         except Exception as e:
             self.log_print(f"Failed to list batches: {str(e)}")
             return []
+
+def _extract_openai_gpt_response(x):
+    """Extract content from OpenAI GPT batch response structure."""
+    # Convert to string first to check for error patterns
+    str_response = str(x).lower()
+    
+    if "error code" in str_response:
+        return str(x)  # Return error as-is
+    
+    # If it's already a dict, try to extract
+    if isinstance(x, dict):
+        try:
+            return x['response']['body']['choices'][0]['message']['content']
+        except (KeyError, IndexError, TypeError) as e:
+            raise ValueError(f"Failed to extract OpenAI GPT response from dict: {e}. Response: {x}")
+    
+    # If it's a string, try multiple parsing methods
+    if isinstance(x, str):
+        # Method 1: Try JSON parsing first
+        try:
+            x_dict = json.loads(x)
+            return x_dict['response']['body']['choices'][0]['message']['content']
+        except (json.JSONDecodeError, KeyError, IndexError, TypeError):
+            pass  # Try next method
+        
+        # Method 2: Try eval() for Python dict-like strings (safer with ast.literal_eval)
+        try:
+            import ast
+            x_dict = ast.literal_eval(x)
+            return x_dict['response']['body']['choices'][0]['message']['content']
+        except (ValueError, SyntaxError, KeyError, IndexError, TypeError):
+            pass  # Try next method
+        
+        # Method 3: Try replacing single quotes with double quotes and parse as JSON
+        try:
+            # Replace single quotes with double quotes for JSON compatibility
+            json_str = x.replace("'", '"').replace('False', 'false').replace('True', 'true').replace('None', 'null')
+            x_dict = json.loads(json_str)
+            return x_dict['response']['body']['choices'][0]['message']['content']
+        except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
+            return str(x)    
+    
+    # If it's neither dict nor string, raise error
+    raise ValueError(f"OpenAI GPT response must be dict or string, got {type(x)}: {x}")
+
+def _extract_flagged_status(model_response: str, model: str) -> int:
+    """
+    Extract flagged status from model response.
+    """
+    model_response_extracted = _extract_openai_gpt_response(model_response)
+
+    if model == "gpt-4.1":
+        # Check for specific phrases in GPT-4.1 responses
+        refusal_patterns = ["I'm sorry, but", "I’m sorry, but", "Sorry, but that's a",
+                       "I can't repeat", "I can't provide", "I can’t repeat",
+                       "I can't comply with", "I cannot repeat", 
+                       "I cannot simply output", "I can't output", "I cannot output",
+                       "I can't fulfill", "I cannot fulfill", "I cannot directly repeat", "I cannot fully reproduce"]
+        flagged = 1 if any(pattern in model_response_extracted for pattern in refusal_patterns) else 0
+
+        # Further check if response get flagged because of length phrases
+        length_phrases = ["very long passage", "is very long",
+                          "that long passage", "is too long to",
+                          "extreme length", "a large block of", "a very large volume of text",
+                          "a very long and complex request", "a very large block of text",
+                          "a very long and detailed text", "is very large", "a very large amount of text",
+                          "very large blocks of", "a very large passage", "quite extensive",
+                          "extremely long", "extremely extensive", "it is extensive", 
+                          "too extensive", "it is an extensive", "a substantial passage", "a very large text",
+                          "very lengthy", "extremely lengthy", "too much text", "long passage",
+                          "due to its length", "a passage of that length", "exceeds the length limits",
+                          "exceptionally long", "quite lengthy", "extensive text", "such a long text",
+                          "exceeds the platform's", "due to both length", "too long for me to repeat", 
+                          "too lengthy for me to repeat", "exceeds the allowable response length",
+                          ]
+        # Flag can only be 2 if both length and refusal phrases are present
+        flagged = 2 if (any(phrase in model_response_extracted for phrase in length_phrases) and flagged == 1) else flagged
+        return flagged
+    elif model == "gpt-5":
+        # Check for specific phrases in GPT-5 responses
+        refusal_phrases = ["I can’t repeat", "I cannot repeat", 
+                   "I can’t simply repeat", "I can’t verbatim repeat",
+                   "I’m not able to repeat", "I am not able to repeat",
+                   "Invalid prompt: we've limited access to this content for safety reasons."]
+        flagged = 1 if any(pattern in model_response_extracted for pattern in refusal_phrases) else 0
+
+        # Further check if response get flagged because of length phrases
+        length_refusal_phrases = ["very long passage", "is very long",
+                          "that long passage", "is too long to"]
+        # Flag can only be 2 if only length phrases are present
+        flagged = 2 if any(phrase in model_response_extracted for phrase in length_refusal_phrases) else flagged
+        return flagged
+    
+    return -1
 
 def test_process_dataset_with_gpt5():
     """

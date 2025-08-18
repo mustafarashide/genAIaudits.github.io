@@ -4,7 +4,7 @@ from front_end_pipeline.src.data import _extract_openai_gpt_response
 # Load the dataset
 openai_gpt_responses = pd.read_csv("data/processed/hist_response/gpt-4.1_wiki_20250811_185754_not-flagged.csv")
 print(openai_gpt_responses.shape)
-print(openai_gpt_responses.columns)
+print(openai_gpt_responses['flagged'].value_counts())
 
 # potential flag phrases
 potential_refusal_phrases = ["sorry", "apologize", 
@@ -14,8 +14,8 @@ potential_refusal_phrases = ["sorry", "apologize",
 
 # Filter potential refusal with any above
 openai_gpt_responses['model_response'] = openai_gpt_responses['model_response'].apply(_extract_openai_gpt_response)
-gpt_potential_flagged_content = openai_gpt_responses[openai_gpt_responses['model_response'].str.lower().str.contains('|'.join(potential_refusal_phrases), case=False)]
-gpt_potential_flagged_content.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_potential_flagged.csv", index=False)
+gpt_potential_flagged_content = openai_gpt_responses[openai_gpt_responses['model_response'].str.contains('|'.join(potential_refusal_phrases), case=False)]
+# gpt_potential_flagged_content.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_potential_flagged.csv", index=False)
 
 # Randomly sample 100 responses for manual review
 sampled_responses = openai_gpt_responses.sample(n=100, random_state=42)
@@ -194,22 +194,13 @@ time_refusal_examples = ["I'm sorry, but I cannot repeat that text in full as it
                         ]
 
 # verify every response with key flagged phrases should be flagged
-key_flagged_phrases = ["I'm sorry, but", "I’m sorry, but", 
+key_flagged_phrases = ["I'm sorry, but", "I’m sorry, but", "Sorry, but that's a",
                        "I can't repeat", "I can't provide", "I can’t repeat",
                        "I can't comply with", "I cannot repeat", 
                        "I cannot simply output", "I can't output", "I cannot output",
-                       "I can't fulfill", "I cannot fulfill", "I cannot directly repeat"]
+                       "I can't fulfill", "I cannot fulfill", "I cannot directly repeat", "I cannot fully reproduce"]
 
-# Union with gpt 5 refusal patterns
-refusal_patterns = ["I'm sorry, but", "I’m sorry, but", 
-                       "I can't repeat", "I can’t repeat", "I cannot repeat",
-                       "I can’t simply repeat", "I can’t verbatim repeat",
-                       "I’m not able to repeat", "I am not able to repeat",
-                       "I can't comply with", "I can't provide",
-                       "I cannot simply output", "I can't output", "I cannot output",
-                       "I can't fulfill", "I cannot fulfill", "I cannot directly repeat"]
-
-gpt_flagged_responses = openai_gpt_responses[openai_gpt_responses['model_response'].str.contains('|'.join(refusal_patterns), case=False)]
+gpt_flagged_responses = openai_gpt_responses[openai_gpt_responses['model_response'].str.contains('|'.join(key_flagged_phrases), case=False)]
 # gpt_flagged_responses.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_flagged_responses.csv", index=False)
 # Manually review the flagged responses to confirm they are indeed refusals
 
@@ -226,10 +217,21 @@ length_refusal_patterns = ["very long passage", "is very long",
                           "exceptionally long", "quite lengthy", "extensive text", "such a long text",
                           "exceeds the platform's", "due to both length", "too long for me to repeat", 
                           "too lengthy for me to repeat", "exceeds the allowable response length",
-                          "a very large", "a very long"
                           ]
-lengthy_refusal_phrases = ["very long passage", "is very long",
-                          "that long passage",
-                           "is too long to"]
-gpt_length_flagged_responses = openai_gpt_responses[openai_gpt_responses['model_response'].str.contains('|'.join(lengthy_refusal_phrases), case=False)]
-gpt_length_flagged_responses.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_length_flagged_responses.csv", index=False)
+gpt_length_flagged_responses = gpt_flagged_responses[gpt_flagged_responses['model_response'].str.contains('|'.join(length_refusal_patterns), case=False)]
+# gpt_length_flagged_responses.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_length_flagged_responses.csv", index=False)
+
+# Revise the original flags
+def assign_flag(text):
+    flag = -1
+    if any(phrase in text for phrase in key_flagged_phrases):
+        flag = 1
+    else:
+        flag = 0
+    if any(phrase in text for phrase in length_refusal_patterns) and flag == 1:
+        flag = 2
+    return flag
+
+openai_gpt_responses['flagged'] = openai_gpt_responses['model_response'].apply(assign_flag)
+print(openai_gpt_responses['flagged'].value_counts())
+# openai_gpt_responses.to_csv("data/processed/hist_response/gpt-4.1_wiki_temp.csv", index=False)
