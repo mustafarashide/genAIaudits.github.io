@@ -1,9 +1,9 @@
 """Main pipeline orchestrator."""
-import os
 from datetime import datetime
 from front_end_pipeline.src.data import load_data
 from front_end_pipeline.src.charts import create_trends_chart
 from front_end_pipeline.src.html import generate_dashboard_html
+from pathlib import Path
 
 def run_pipeline():
     # Load data
@@ -39,19 +39,18 @@ def run_pipeline():
     html_output = generate_dashboard_html(fig_input_dict)
     
     # Save HTML to file
-    output_path = "index.html"
+    output_path = Path("index.html")
     
-    # if there is index.html, rename it to index_old_timestamp.html
-    try:
-        with open(output_path, 'r') as f:
-            old_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            old_output_path = f"index_old_{old_timestamp}.html"
-            f.close()
-            os.rename(output_path, old_output_path)
-            print(f"Renamed existing index.html to {old_output_path}")
-    except FileNotFoundError:
-        pass  # No existing file to rename
-
+    # If there is index.html, rename it to index_old_timestamp.html
+    if output_path.exists():
+        old_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        old_index_folder = Path("old_index_pages")
+        old_file_name = f"index_old_{old_timestamp}.html"
+        old_index_folder.mkdir(exist_ok=True)
+        old_output_path = old_index_folder / old_file_name
+        output_path.rename(old_output_path)
+        print(f"Renamed existing index.html to {old_output_path}")
+    
     with open(output_path, 'w') as f:
         f.write(html_output)
     print(f"Dashboard saved to {output_path}")

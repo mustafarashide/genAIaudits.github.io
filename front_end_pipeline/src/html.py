@@ -6,7 +6,78 @@ from typing import Dict, List, Optional, Tuple
 import plotly
 import json
 from datetime import datetime
+import os
 
+def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/charts") -> None:
+    """
+    Export chart data to separate JSON files.
+    
+    Args:
+        fig_input_dict: Dict with title as key, [figure, dataframe] as value
+        output_dir: Directory to save JSON files
+    """
+    # Create output directory if it doesn't exist
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    
+    chart_data = {}
+    
+    for title, (fig, df) in fig_input_dict.items():
+        # Prepare dataframe for JavaScript (same logic as before)
+        df_for_js = df.copy()
+        
+        if df_for_js.empty:
+            chart_data[title] = []
+        else:
+            df_for_js['date'] = df_for_js['date'].dt.strftime('%Y-%m-%d') if pd.api.types.is_datetime64_any_dtype(df_for_js['date']) else df_for_js['date']
+            
+            df_for_js['content'] = df_for_js.apply(
+                lambda row: 'TRUNCATED TO FIRST 30,000 CHARS: ' + row['content'][:300] + '...' if row['flagged'] == 2 
+                else row['content'][:300] + '...' if len(row['content']) > 300 else row['content'],
+                axis=1
+            )
+            
+            df_for_js['model_response_full'] = df_for_js.apply(
+                lambda row: row['model_response'] if row['flagged'] != 0 
+                else (str(row['model_response'])[:300] + '...' if len(str(row['model_response'])) > 300 else str(row['model_response'])),
+                axis=1
+            )
+            
+            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 100
+            
+            df_for_js['sort_order'] = df_for_js['flagged'].map({1: 1, 2: 2, 0: 3})
+            df_for_js = df_for_js.sort_values(by=['sort_order', 'date'], ascending=[True, False])
+            df_for_js = df_for_js.drop(columns=['sort_order'])
+
+            if 'model_response' in df_for_js.columns:
+                df_for_js = df_for_js.drop(columns=['model_response'])
+            
+            chart_data[title] = df_for_js.to_dict('records')
+    
+    # Save individual chart data files
+    for title, data in chart_data.items():
+        # Create safe filename from title
+        safe_filename = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        safe_filename = safe_filename.replace(' ', '_') + '.json'
+        
+        file_path = Path(output_dir) / safe_filename
+        with open(file_path, 'w') as f:
+            json.dump({
+                'title': title,
+                'data': data,
+                'generated_at': datetime.now().isoformat(),
+                'count': len(data)
+            }, f, indent=2)
+    
+    # Create manifest file
+    manifest = {
+        'generated_at': datetime.now().isoformat(),
+        'charts': list(chart_data.keys()),
+        'files': {title: "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_') + '.json' 
+                 for title in chart_data.keys()}
+    }
+    
+    with open(Path(output_dir) / 'manifest.json', 'w') as f:
+        json.dump(manifest, f, indent=2)
 
 def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
     """
@@ -18,9 +89,11 @@ def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
     Returns:
         Complete HTML string for the dashboard
     """
-    # Convert figures to HTML and prepare data
+    # Export chart data to JSON files
+    export_chart_data(fig_input_dict)
+    
+    # Convert figures to HTML (same logic as before)
     chart_htmls = {}
-    chart_data = {}  # Store dataframes as JSON for JavaScript access
 
     # First, determine the y-axis range across all figures
     y_max = 0
@@ -64,46 +137,10 @@ def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
             'id': chart_id
         }
 
-        # Prepare dataframe for JavaScript (all data, both flagged and not flagged)
-        df_for_js = df.copy()
-        
-        # Handle empty dataframe case
-        if df_for_js.empty:
-            chart_data[title] = []
-        else:
-            df_for_js['date'] = df_for_js['date'].dt.strftime('%Y-%m-%d') if pd.api.types.is_datetime64_any_dtype(df_for_js['date']) else df_for_js['date']
-            
-            # Add truncated info for flag == 2
-            df_for_js['content'] = df_for_js.apply(
-                lambda row: 'TRUNCATED TO FIRST 30,000 CHARS: ' + row['content'][:300] + '...' if row['flagged'] == 2 
-                else row['content'][:300] + '...' if len(row['content']) > 300 else row['content'],
-                axis=1
-            )
-            
-            # Handle model_response_full based on flagged status
-            df_for_js['model_response_full'] = df_for_js.apply(
-                lambda row: row['model_response'] if row['flagged'] != 0 
-                else (str(row['model_response'])[:300] + '...' if len(str(row['model_response'])) > 300 else str(row['model_response'])),
-                axis=1
-            )
-            
-            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 100
-            
-            # Sort by flagged status (1, 2, 0) then by date
-            df_for_js['sort_order'] = df_for_js['flagged'].map({1: 1, 2: 2, 0: 3})
-            df_for_js = df_for_js.sort_values(by=['sort_order', 'date'], ascending=[True, False])
-            df_for_js = df_for_js.drop(columns=['sort_order'])
-
-            # drop model_response column for size optimization
-            if 'model_response' in df_for_js.columns:
-                df_for_js = df_for_js.drop(columns=['model_response'])
-            
-            chart_data[title] = df_for_js.to_dict('records')
-
-    # Template variables
+    # Template variables (removed chart_data)
     template_vars = {
         'chart_htmls': chart_htmls,
-        'chart_data': json.dumps(chart_data),  # Pass data as JSON
+        'chart_titles': list(fig_input_dict.keys()),  # Pass chart titles for data loading
         'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'css_content': _get_css_content(),
         'js_content': _get_js_content()
@@ -167,8 +204,13 @@ def _render_template(template_vars: Dict) -> str:
     </header>
 
     <main>
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" style="text-align: center; padding: 20px;">
+            <p>Loading chart data...</p>
+        </div>
+
         <!-- Four Charts Grid -->
-        <div class="charts-grid">
+        <div class="charts-grid" id="chartsGrid" style="display: none;">
             {% for title, chart_info in chart_htmls.items() %}
             <div class="chart-container" data-chart-title="{{ title }}">
                 <h2>{{ title }}</h2>
@@ -177,7 +219,7 @@ def _render_template(template_vars: Dict) -> str:
             {% endfor %}
         </div>
 
-        <!-- Dynamic Table Section (initially hidden) -->
+        <!-- Dynamic Table Section -->
         <section id="tableSection" class="table-section" style="display: none;">
             <div class="table-header">
                 <h2 id="tableTitle">Category Data</h2>
@@ -187,9 +229,10 @@ def _render_template(template_vars: Dict) -> str:
         </section>
     </main>
 
-    <!-- Pass data to JavaScript -->
+    <!-- Pass chart titles to JavaScript -->
     <script>
-        window.chartData = {{ chart_data | safe }};
+        window.chartTitles = {{ chart_titles | tojson }};
+        window.chartData = {}; // Will be populated by data loading
     </script>
     <script>{{ js_content }}</script>
 </body>
@@ -402,87 +445,166 @@ def _get_css_content() -> str:
 
 
 def _get_js_content() -> str:
-    """JavaScript for click-based category filtering."""
+    """JavaScript for click-based category filtering with dynamic data loading."""
     return """
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const tableSection = document.getElementById('tableSection');
             const tableTitle = document.getElementById('tableTitle');
             const tableContainer = document.getElementById('tableContainer');
             const clearBtn = document.getElementById('clearTable');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const chartsGrid = document.getElementById('chartsGrid');
             
-            // Add click listeners to all charts
-            Object.keys(window.chartData).forEach((chartTitle, index) => {
-                const chartDiv = document.getElementById(`chart_${index}`);
-                if (chartDiv) {
-                    // Point click event
-                    chartDiv.on('plotly_click', function(data) {
-                        console.log('Click data:', data); // Debug log
-                        if (data.points && data.points.length > 0) {
-                            const clickedCategory = data.points[0].data.name;
-                            console.log('Clicked category from point:', clickedCategory); // Debug log
-                            showCategoryData(chartTitle, clickedCategory);
+            try {
+                // Load chart data from JSON files
+                await loadChartData();
+                
+                // Hide loading indicator and show charts grid
+                loadingIndicator.style.display = 'none';
+                chartsGrid.style.display = 'grid';
+                
+                // Initialize chart interactions after data is loaded
+                initializeChartInteractions();
+                
+            } catch (error) {
+                console.error('Failed to load chart data:', error);
+                loadingIndicator.innerHTML = '<p style="color: red;">Failed to load chart data. Please refresh the page.</p>';
+            }
+            
+            async function loadChartData() {
+                try {
+                    // First, try to load manifest
+                    const manifestResponse = await fetch('data/charts/manifest.json');
+                    const manifest = await manifestResponse.json();
+                    
+                    // Load individual chart data files based on manifest
+                    const dataPromises = window.chartTitles.map(async (title) => {
+                        const filename = manifest.files[title];
+                        if (!filename) {
+                            console.warn(`No file mapping for chart: ${title}`);
+                            return { title, data: [] };
+                        }
+                        
+                        const response = await fetch(`data/charts/${filename}`);
+                        if (!response.ok) {
+                            throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                        }
+                        const chartData = await response.json();
+                        return { title, data: chartData.data };
+                    });
+                    
+                    const results = await Promise.all(dataPromises);
+                    
+                    // Populate window.chartData
+                    results.forEach(({ title, data }) => {
+                        window.chartData[title] = data;
+                    });
+                    
+                } catch (error) {
+                    console.error('Failed to load from manifest, falling back to direct file loading:', error);
+                    
+                    // Fallback: try to load files directly based on title
+                    const dataPromises = window.chartTitles.map(async (title) => {
+                        const safeFilename = title.replace(/[^a-zA-Z0-9 \\-_]/g, '').replace(/ /g, '_') + '.json';
+                        try {
+                            const response = await fetch(`data/charts/${safeFilename}`);
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            const chartData = await response.json();
+                            return { title, data: chartData.data };
+                        } catch (fileError) {
+                            console.warn(`Failed to load ${safeFilename}:`, fileError);
+                            return { title, data: [] };
                         }
                     });
                     
-                    // Legend click event
-                    chartDiv.on('plotly_legendclick', function(data) {
-                        console.log('Legend click data:', data); // Debug log
-                        
-                        // For legend clicks, we need to access the trace name differently
-                        // data.curveNumber gives us the trace index
-                        // We need to get the trace from the plot's data
-                        const plotElement = document.getElementById(`chart_${index}`);
-                        const plotData = plotElement.data;
-                        
-                        if (plotData && plotData[data.curveNumber]) {
-                            const clickedCategory = plotData[data.curveNumber].name;
-                            console.log('Clicked category from legend:', clickedCategory); // Debug log
-                            showCategoryData(chartTitle, clickedCategory);
-                        }
-                        
-                        // Return false to prevent default legend behavior (hide/show trace)
-                        return false;
+                    const results = await Promise.all(dataPromises);
+                    results.forEach(({ title, data }) => {
+                        window.chartData[title] = data;
                     });
                 }
-            });
+                
+                console.log('Chart data loaded:', Object.keys(window.chartData));
+            }
             
-            // Clear table button
-            clearBtn.addEventListener('click', function() {
-                tableSection.style.display = 'none';
-            });
-            
-            // Handle expand/collapse clicks
-            tableContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('expand-btn')) {
-                    const responseCell = e.target.closest('.response-cell');
-                    const shortText = responseCell.querySelector('.short-text');
-                    const fullText = responseCell.querySelector('.full-text');
-                    const expandBtn = responseCell.querySelector('.expand-btn');
-                    
-                    if (fullText.style.display === 'none' || !fullText.style.display) {
-                        // Show full text
-                        shortText.style.display = 'none';
-                        fullText.style.display = 'block';
-                        expandBtn.textContent = 'Show Less';
-                    } else {
-                        // Show short text
-                        shortText.style.display = 'block';
-                        fullText.style.display = 'none';
-                        expandBtn.textContent = 'Show More';
+            function initializeChartInteractions() {
+                // Add click listeners to all charts
+                Object.keys(window.chartData).forEach((chartTitle, index) => {
+                    const chartDiv = document.getElementById(`chart_${index}`);
+                    if (chartDiv) {
+                        // Point click event
+                        chartDiv.on('plotly_click', function(data) {
+                            console.log('Click data:', data);
+                            if (data.points && data.points.length > 0) {
+                                const clickedCategory = data.points[0].data.name;
+                                console.log('Clicked category from point:', clickedCategory);
+                                showCategoryData(chartTitle, clickedCategory);
+                            }
+                        });
+                        
+                        // Legend click event
+                        chartDiv.on('plotly_legendclick', function(data) {
+                            console.log('Legend click data:', data);
+                            
+                            const plotElement = document.getElementById(`chart_${index}`);
+                            const plotData = plotElement.data;
+                            
+                            if (plotData && plotData[data.curveNumber]) {
+                                const clickedCategory = plotData[data.curveNumber].name;
+                                console.log('Clicked category from legend:', clickedCategory);
+                                showCategoryData(chartTitle, clickedCategory);
+                            }
+                            
+                            // Return false to prevent default legend behavior
+                            return false;
+                        });
                     }
-                }
-            });
+                });
+                
+                // Clear table button
+                clearBtn.addEventListener('click', function() {
+                    tableSection.style.display = 'none';
+                });
+                
+                // Handle expand/collapse clicks
+                tableContainer.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('expand-btn')) {
+                        const responseCell = e.target.closest('.response-cell');
+                        const shortText = responseCell.querySelector('.short-text');
+                        const fullText = responseCell.querySelector('.full-text');
+                        const expandBtn = responseCell.querySelector('.expand-btn');
+                        
+                        if (fullText.style.display === 'none' || !fullText.style.display) {
+                            // Show full text
+                            shortText.style.display = 'none';
+                            fullText.style.display = 'block';
+                            expandBtn.textContent = 'Show Less';
+                        } else {
+                            // Show short text
+                            shortText.style.display = 'block';
+                            fullText.style.display = 'none';
+                            expandBtn.textContent = 'Show More';
+                        }
+                    }
+                });
+            }
             
             function showCategoryData(chartTitle, category) {
-                console.log('Showing data for:', chartTitle, category); // Debug log
+                console.log('Showing data for:', chartTitle, category);
                 
                 // Get data for the clicked chart
                 const chartData = window.chartData[chartTitle];
                 
+                if (!chartData) {
+                    alert(`No data loaded for chart: ${chartTitle}`);
+                    return;
+                }
+                
                 // Filter data for the clicked category
                 const categoryData = chartData.filter(row => row.category === category);
                 
-                console.log('Filtered data:', categoryData); // Debug log
+                console.log('Filtered data:', categoryData);
                 
                 if (categoryData.length === 0) {
                     alert(`No data found for category: ${category} in chart: ${chartTitle}`);
@@ -602,3 +724,5 @@ def _get_js_content() -> str:
             }
         });
     """
+
+
