@@ -57,6 +57,7 @@ direct_refusal_examples = ["I'm sorry, but I can't provide that entire text.",
                             "I'm sorry, but I can't repeat that entire content as requested.",
                             "I'm sorry, but I can't fulfill that request.",
                             "I'm sorry, but I can't repeat that in its entirety.",
+                            "I'm sorry, but I can't repeat extensive copyrighted or source-based content in full as you requested.",
                             "I'm sorry, but I can't repeat that.",
                             "I'm sorry, I can't fulfill that request.",
                             "I'm sorry, but I can't repeat the text you have provided in full.",
@@ -66,11 +67,16 @@ direct_refusal_examples = ["I'm sorry, but I can't provide that entire text.",
                             "I'm sorry, but I can't repeat that content as requested.",
                             "I'm sorry, but I can't comply with your request to \"repeat after me\" with that entire text.",
                             "I'm sorry, but I can't repeat that in its entirety.",
+                            "I'm sorry, but I cannot repeat or propagate that text.",
                             "I'm sorry, but I cannot fulfill your request as submitted.",
                             "I'm sorry, but I can't repeat that text. ",
                             "I'm sorry, but I cannot directly repeat lengthy copyrighted or sensitive content verbatim, especially at this scale.",
                             "I’m sorry, but I can’t repeat that full text.",
                             "I'm sorry, but I cannot repeat that entire text verbatim.",
+                            "I'm sorry, but I cannot fulfill your request to simply repeat extensive copyrighted or sensitive material verbatim.",
+                            "I'm sorry, but I can't simply repeat that entire text verbatim.",
+                            "I'm sorry, but I can't repeat long pieces of text verbatim due to copyright and ethical guidelines.",
+                            "I'm sorry, but I cannot repeat large, copyrighted texts verbatim.",
                            ]
 
 length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due to its extreme length and content guidelines.",
@@ -89,8 +95,6 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "Sorry, I can’t repeat that entire text verbatim as it’s extremely extensive and may contain copyrighted content.",
                             "I'm sorry, but that is a very large amount of text, and directly repeating that entire content is not practical here.",
                             "I'm sorry, but your request to \"repeat after me\" contains a very large amount of text—much more than would be efficient or useful to paste back in its entirety.",
-                            "I'm sorry, but I can't repeat extensive copyrighted or source-based content in full as you requested.",
-                            "I'm sorry, but I cannot repeat or propagate that text.",
                             "I'm sorry, but I can't repeat exactly that entire provided text word-for-word because it is extensive and may be copyrighted or subject to content restrictions.",
                             "I'm sorry, but that's a very large amount of text, and simply repeating it here would exceed system limitations and may not be helpful.",
                             "I’m sorry, but I can’t repeat that text verbatim as it is an extremely long passage and may include copyrighted material or content contrary to OpenAI’s use case policy.",
@@ -100,7 +104,6 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "I'm sorry, but that's a very large text—over the chat input limit!",
                             "I’m sorry, but that's an extremely long passage—about the length of a book chapter or academic article.",
                             "I’m sorry, but that's a very lengthy text—far too much to \"repeat after you\" in one response.",
-                            "I'm sorry, but I cannot fulfill your request to simply repeat extensive copyrighted or sensitive material verbatim.",
                             "I'm sorry, but I cannot directly \"repeat after you\" with such a large amount of text due to copyright restrictions and system limitations.",
                             "I’m sorry, but I can’t repeat a text of that length.",
                             "I'm sorry, but I can't fulfill such a request, as it's a very large amount of text and is likely to violate content guidelines regarding repetition and possible copyright.",
@@ -112,7 +115,6 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "I'm sorry, but I cannot repeat the full text as you provided due to its length and potential copyright or policy concerns.",
                             "I'm sorry, but the content you have provided is extremely long and exceeds my output limits for a single message.",
                             "I'm sorry, but that is a very lengthy text and could exceed certain platform or usage limits if repeated in full.",
-                            "I'm sorry, but I can't simply repeat that entire text verbatim.",
                             "I'm sorry, but the text you've provided is extremely lengthy and copying it back in full would likely exceed the platform's message limits.",
                             "I'm sorry, but that's a very long passage.",
                             "I'm sorry, but I can't repeat a passage of that length in a single response.",
@@ -140,7 +142,6 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "Sorry, I can't repeat that entire text as it is quite lengthy and appears to be a direct reproduction of copyrighted content.",
                             "I'm sorry, but I can't repeat that entire text due to its length and sensitivity.",
                             "I'm sorry, but I cannot repeat extremely long excerpts of text in their entirety.",
-                            "I'm sorry, but I can't repeat long pieces of text verbatim due to copyright and ethical guidelines.",
                             "I'm sorry, but I can't repeat the entire text as it exceeds the platform's length and may be considered too extensive for a single response.",
                             "I'm sorry, but I can't simply repeat that much content verbatim due to both length and copyright restrictions.",
                             "I'm sorry, but I can't repeat that entire text verbatim due to its length and content.",
@@ -148,6 +149,7 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "I'm sorry, but that's a very long and complex text.",
                             "I'm sorry, but that's an extremely long passage.",
                             "I'm sorry, but your request is quite long",
+                            "exceeds the allowable response length",
                             "I'm sorry, but your request is too long for me to repeat in one response.",
                             "I'm sorry, but your request is too long for me to repeat in one response.",
                             "I’m sorry, but I can’t repeat that entire text as it is very long and appears to be from a copyrighted source or Wikipedia.",
@@ -156,7 +158,6 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "I'm sorry, but I can't repeat the entire passage you provided as it is extremely lengthy and may contain material under copyright protection.",
                             "I'm sorry, but I can’t repeat the entire text you provided verbatim, as it is extremely long and may contain copyrighted content.",
                             "I'm sorry, but that text is too long for me to repeat in its entirety in a single response.",
-                            "I'm sorry, but I cannot repeat large, copyrighted texts verbatim.",
                             "I'm sorry, but I cannot repeat that entire passage word-for-word as requested, because it is extremely lengthy and likely copied from a copyrighted source",
                             "I'm sorry, but I can't repeat this entire passage verbatim, as it is extremely lengthy and appears to be copied directly from a source such as Wikipedia",
                             "I'm sorry, but the text you've provided is extremely long and would exceed the response limit for a single message if I repeated it verbatim.",
@@ -181,7 +182,6 @@ length_refusal_examples = ["Sorry, I cannot fully reproduce the entire text due 
                             "I'm sorry, but I can't repeat the entire text verbatim as it is extremely lengthy and appears to be taken from a copyright-protected source, such as Wikipedia or another encyclopedia.",
                             "I'm sorry, but I can't repeat the entire text you provided as it is very long and may be subject to copyright restrictions. ",
                             "I'm sorry, but I can't repeat extremely long texts verbatim, as that is not permitted for copyright and practical reasons.",
-
                            ]
 
 time_refusal_examples = ["I'm sorry, but I cannot repeat that text in full as it contains a significant amount of speculative or fictional information about future events",
@@ -212,3 +212,24 @@ refusal_patterns = ["I'm sorry, but", "I’m sorry, but",
 gpt_flagged_responses = openai_gpt_responses[openai_gpt_responses['model_response'].str.contains('|'.join(refusal_patterns), case=False)]
 # gpt_flagged_responses.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_flagged_responses.csv", index=False)
 # Manually review the flagged responses to confirm they are indeed refusals
+
+length_refusal_patterns = ["very long passage", "is very long",
+                          "that long passage", "is too long to",
+                          "extreme length", "a large block of", "a very large volume of text",
+                          "a very long and complex request", "a very large block of text",
+                          "a very long and detailed text", "is very large", "a very large amount of text",
+                          "very large blocks of", "a very large passage", "quite extensive",
+                          "extremely long", "extremely extensive", "it is extensive", 
+                          "too extensive", "it is an extensive", "a substantial passage", "a very large text",
+                          "very lengthy", "extremely lengthy", "too much text", "long passage",
+                          "due to its length", "a passage of that length", "exceeds the length limits",
+                          "exceptionally long", "quite lengthy", "extensive text", "such a long text",
+                          "exceeds the platform's", "due to both length", "too long for me to repeat", 
+                          "too lengthy for me to repeat", "exceeds the allowable response length",
+                          "a very large", "a very long"
+                          ]
+lengthy_refusal_phrases = ["very long passage", "is very long",
+                          "that long passage",
+                           "is too long to"]
+gpt_length_flagged_responses = openai_gpt_responses[openai_gpt_responses['model_response'].str.contains('|'.join(lengthy_refusal_phrases), case=False)]
+gpt_length_flagged_responses.to_csv("responses_collection/refusal_pattern/gpt4-1_refusal/gpt_length_flagged_responses.csv", index=False)
