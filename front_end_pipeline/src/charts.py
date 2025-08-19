@@ -49,13 +49,27 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
     )
     categories = avg_flagging_rates.index.tolist()  # Categories sorted by avg flagging rate
     
+    # Create consistent color mapping based on category names
+    all_categories = sorted(chart_data['category'].unique())  # Sort alphabetically for consistency
+    colors = [
+    '#636efa', '#EF553B', '#00cc96', '#ab63fa', '#FFA15A', 
+    '#19d3f3', '#ff6692', '#b6e880', '#ff97ff', '#fecb52',
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+    '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
+    '#c44569', '#f8b500', '#6c5ce7', '#a29bfe', '#fd79a8',
+    '#e84393', '#00b894', '#00cec9', '#0984e3', '#74b9ff',
+    '#fd5068', '#fdcb6e', '#e17055', '#81ecec', '#55a3ff',
+    '#ff7675', '#fab1a0', '#00b8d4', '#26de81', '#fed330',
+    '#3742fa', '#7bed9f', '#70a1ff'
+    ]
+    color_map = {cat: colors[i % len(colors)] for i, cat in enumerate(all_categories)}    
     # Create figure
     fig = go.Figure()
     
     # Add a line for each category (in sorted order)
-    colors = ['#636efa', '#EF553B', '#00cc96', '#ab63fa', '#FFA15A']
-    
-    for i, category in enumerate(categories):
+    for category in categories:
         category_data = chart_data[chart_data['category'] == category]
         
         fig.add_trace(go.Scatter(
@@ -63,7 +77,7 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
             y=category_data['flagging_rate'],
             mode='lines+markers',
             name=category,
-            line=dict(color=colors[i % len(colors)], width=2),
+            line=dict(color=color_map[category], width=2),
             marker=dict(size=8),
             hovertemplate=(
                 "<b>%{fullData.name}</b><br>" +
@@ -145,8 +159,8 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     )
     df_hover['hovertext'] = df_hover.apply(
         lambda row: '<br>'.join(
-            f"{sc}: {rate:.1f}% ({count} wiki pages)" 
-            for sc, rate, count in zip(row['subcategory'], row['flag_rate'], row['total_count'])
+            f"{sc}: {rate:.1f}%" 
+            for sc, rate in zip(row['subcategory'], row['flag_rate'])
         ),
         axis=1
     )

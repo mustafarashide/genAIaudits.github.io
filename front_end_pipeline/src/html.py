@@ -31,7 +31,7 @@ def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/c
             df_for_js['date'] = df_for_js['date'].dt.strftime('%Y-%m-%d') if pd.api.types.is_datetime64_any_dtype(df_for_js['date']) else df_for_js['date']
             
             df_for_js['content'] = df_for_js.apply(
-                lambda row: 'TRUNCATED TO FIRST 30,000 CHARS: ' + row['content'][:300] + '...' if row['flagged'] == 2 
+                lambda row: 'TRUNCATED TO FIRST 19,000 CHARS: ' + row['content'][:300] + '...' if row['flagged'] == 2 
                 else row['content'][:300] + '...' if len(row['content']) > 300 else row['content'],
                 axis=1
             )
@@ -544,6 +544,7 @@ def _get_js_content() -> str:
                         });
                         
                         // Legend click event
+                        /*
                         chartDiv.on('plotly_legendclick', function(data) {
                             console.log('Legend click data:', data);
                             
@@ -559,6 +560,7 @@ def _get_js_content() -> str:
                             // Return false to prevent default legend behavior
                             return false;
                         });
+                        */
                     }
                 });
                 
