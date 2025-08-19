@@ -543,24 +543,38 @@ def _get_js_content() -> str:
                             }
                         });
                         
-                        // Legend click event
-                        /*
+                        // Custom legend click handling
+                        let clickTimeout;
+                        let clickCount = 0;
+                        
                         chartDiv.on('plotly_legendclick', function(data) {
-                            console.log('Legend click data:', data);
+                            clickCount++;
                             
-                            const plotElement = document.getElementById(`chart_${index}`);
-                            const plotData = plotElement.data;
-                            
-                            if (plotData && plotData[data.curveNumber]) {
-                                const clickedCategory = plotData[data.curveNumber].name;
-                                console.log('Clicked category from legend:', clickedCategory);
-                                showCategoryData(chartTitle, clickedCategory);
+                            if (clickCount === 1) {
+                                // Set timeout for single click
+                                clickTimeout = setTimeout(() => {
+                                    // Single click action
+                                    const plotElement = document.getElementById(`chart_${index}`);
+                                    const plotData = plotElement.data;
+                                    
+                                    if (plotData && plotData[data.curveNumber]) {
+                                        const clickedCategory = plotData[data.curveNumber].name;
+                                        console.log('Single clicked category from legend:', clickedCategory);
+                                        showCategoryData(chartTitle, clickedCategory);
+                                    }
+                                    
+                                    clickCount = 0;
+                                }, 800); // 800ms delay to detect double click
+                            } else if (clickCount === 2) {
+                                // Double click detected - clear timeout and allow default behavior
+                                clearTimeout(clickTimeout);
+                                clickCount = 0;
+                                return; // Let plotly handle the double-click (toggle visibility)
                             }
                             
-                            // Return false to prevent default legend behavior
+                            // Prevent default single click behavior (but allow double-click)
                             return false;
                         });
-                        */
                     }
                 });
                 
@@ -726,5 +740,4 @@ def _get_js_content() -> str:
             }
         });
     """
-
 
