@@ -707,7 +707,7 @@ def _get_js_content() -> str:
                         <thead>
                             <tr>
                                 <th>Category</th>
-                                <th>Subcategory</th>
+                                <th>Topic</th>
                                 <th>Source & Content</th>
                                 <th>Model</th>
                                 <th>Date</th>

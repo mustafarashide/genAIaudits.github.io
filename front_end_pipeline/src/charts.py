@@ -83,7 +83,7 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
                 "<b>%{fullData.name}</b><br>" +
                 "Date: %{x}<br>" +
                 "Flagged Rate: %{y:.1f}%<br>" +
-                "<br><b>Subcategory Breakdown:</b><br>" +
+                "<br><b>Topic Breakdown:</b><br>" +
                 "%{customdata}<br>" +
                 "<extra></extra>"
             ),
@@ -125,8 +125,12 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     """Prepare data for charting with proper aggregation."""
     
     # 1. Compute category-level flagged rates
+    # Step 1: deduplicate to remove overcounting for category level flagging rate
+    df_deduplicated = df.drop_duplicates(subset=['date', 'category', 'source'], keep='last')
+
+    # Step 2: Aggregate the deduplicated data
     df_cat_rates = (
-        df
+        df_deduplicated
         .groupby(['date', 'category'], as_index=False)
         .agg({
             'flagged': ['count', lambda x: (x == 1).sum()]

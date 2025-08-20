@@ -131,6 +131,9 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
                 df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
             elif API == "deepseek":
                 df['model_response'] = df['model_response'].apply(_extract_deepseek_response)
+            
+            # Convert length related flags to 0 or 1
+            df['flagged'] = df['flagged'].apply(lambda x: 0 if x == 0 else 1)
 
             # Immediate validate DataFrame shape and NaN values
             assert df.shape[0] == 4210, f"DataFrame shape mismatch for {file_path}: expected 4210 rows, got {df.shape[0]}"
@@ -178,9 +181,9 @@ def _validate_and_concatenate(dataframes: List[pd.DataFrame]) -> pd.DataFrame:
     # Concatenate all dataframes
     combined_df = pd.concat(dataframes, ignore_index=True)
 
-    # Validate flagged column contains only 0/1/2
-    if not combined_df['flagged'].isin([0, 1, 2]).all():
-        raise ValueError("'flagged' column must contain only 0, 1, or 2 values")
+    # Validate flagged column contains only 0/1
+    if not combined_df['flagged'].isin([0, 1]).all():
+        raise ValueError("'flagged' column must contain only 0 or 1 values")
 
     # Convert date column to datetime
     try:
