@@ -151,7 +151,7 @@ def generate_dashboard_html(fig_input_dict: Dict[str, List]) -> str:
 
 
 def _render_template(template_vars: Dict) -> str:
-    """Render HTML template with 4 charts and click-based filtering."""
+    """Render HTML template with 1 chart above + 4 charts in grid and click-based filtering."""
     template_str = """
 <!DOCTYPE html>
 <html lang="en">
@@ -209,13 +209,27 @@ def _render_template(template_vars: Dict) -> str:
             <p>Loading chart data...</p>
         </div>
 
+        <!-- First Chart (Full Width) -->
+        <div class="first-chart" id="chartsGrid" style="display: none;">
+            {% set chart_items = chart_htmls.items() | list %}
+            {% if chart_items %}
+                {% set first_title, first_chart_info = chart_items[0] %}
+                <div class="chart-container first-chart-container" data-chart-title="{{ first_title }}">
+                    <h2>{{ first_title }}</h2>
+                    {{ first_chart_info.html | safe }}
+                </div>
+            {% endif %}
+        </div>
+
         <!-- Four Charts Grid -->
-        <div class="charts-grid" id="chartsGrid" style="display: none;">
+        <div class="charts-grid" id="chartsGridRemaining" style="display: none;">
             {% for title, chart_info in chart_htmls.items() %}
-            <div class="chart-container" data-chart-title="{{ title }}">
-                <h2>{{ title }}</h2>
-                {{ chart_info.html | safe }}
-            </div>
+                {% if not loop.first %}
+                <div class="chart-container" data-chart-title="{{ title }}">
+                    <h2>{{ title }}</h2>
+                    {{ chart_info.html | safe }}
+                </div>
+                {% endif %}
             {% endfor %}
         </div>
 
@@ -245,7 +259,7 @@ def _render_template(template_vars: Dict) -> str:
 
 
 def _get_css_content() -> str:
-    """CSS for 4-chart grid layout and click-based interaction."""
+    """CSS for 1 chart above + 4-chart grid layout and click-based interaction."""
     return """
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -284,6 +298,36 @@ def _get_css_content() -> str:
             flex-grow: 1;
         }
         
+        /* First Chart (Full Width) */
+        .first-chart {
+            margin-bottom: 30px;
+        }
+        
+        .first-chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            width: 100%;
+            min-height: 500px;
+        }
+        
+        .first-chart-container:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .first-chart-container h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #34495e;
+            font-size: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        
         /* 4-Chart Grid Layout */
         .charts-grid {
             display: grid;
@@ -291,7 +335,7 @@ def _get_css_content() -> str:
             grid-template-rows: 1fr 1fr;
             gap: 20px;
             margin-bottom: 40px;
-            min-height: 1200px;
+            min-height: 1000px;
         }
         
         .chart-container {
@@ -440,6 +484,10 @@ def _get_css_content() -> str:
                 grid-template-rows: repeat(4, 400px);
                 min-height: auto;
             }
+            
+            .first-chart-container {
+                min-height: 400px;
+            }
         }
     """
 
@@ -454,14 +502,16 @@ def _get_js_content() -> str:
             const clearBtn = document.getElementById('clearTable');
             const loadingIndicator = document.getElementById('loadingIndicator');
             const chartsGrid = document.getElementById('chartsGrid');
+            const chartsGridRemaining = document.getElementById('chartsGridRemaining');
             
             try {
                 // Load chart data from JSON files
                 await loadChartData();
                 
-                // Hide loading indicator and show charts grid
+                // Hide loading indicator and show charts
                 loadingIndicator.style.display = 'none';
-                chartsGrid.style.display = 'grid';
+                chartsGrid.style.display = 'block';
+                chartsGridRemaining.style.display = 'grid';
                 
                 // Initialize chart interactions after data is loaded
                 initializeChartInteractions();

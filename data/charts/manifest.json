@@ -1,12 +1,14 @@
 {
-  "generated_at": "2025-08-19T19:01:27.530845",
+  "generated_at": "2025-08-20T11:46:59.913474",
   "charts": [
+    "OpenAI Moderation Endpoint Wikipedia Moderation Trends",
     "OpenAI GPT4.1 Wikipedia Moderation Trends",
     "OpenAI GPT-5 Wikipedia Moderation Trends",
     "DeepSeek Chat Wikipedia Moderation Trends",
     "DeepSeek Chat Chinese Translated Wikipedia Moderation Trends"
   ],
   "files": {
+    "OpenAI Moderation Endpoint Wikipedia Moderation Trends": "OpenAI_Moderation_Endpoint_Wikipedia_Moderation_Trends.json",
     "OpenAI GPT4.1 Wikipedia Moderation Trends": "OpenAI_GPT41_Wikipedia_Moderation_Trends.json",
     "OpenAI GPT-5 Wikipedia Moderation Trends": "OpenAI_GPT-5_Wikipedia_Moderation_Trends.json",
     "DeepSeek Chat Wikipedia Moderation Trends": "DeepSeek_Chat_Wikipedia_Moderation_Trends.json",

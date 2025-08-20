@@ -29,7 +29,7 @@ def run_pipeline():
 
     # Generate HTML output
     fig_input_dict = {
-        # title_openaiME_wiki: [fig_openaiME_wiki, df_openaiME_wiki],
+        title_openaiME_wiki: [fig_openaiME_wiki, df_openaiME_wiki],
         title_openaiGPT_wiki: [fig_openaiGPT_wiki, df_openaiGPT_wiki],
         title_gpt5_wiki: [fig_gpt5_wiki, df_gpt5_wiki],
         title_deepseek_wiki: [fig_deepseek_wiki, df_deepseek_wiki],
