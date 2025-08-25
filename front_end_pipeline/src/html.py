@@ -790,4 +790,3 @@ def _get_js_content() -> str:
             }
         });
     """
-

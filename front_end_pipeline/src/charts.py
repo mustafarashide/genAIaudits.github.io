@@ -1,7 +1,7 @@
 """Chart generation module using Plotly."""
 import plotly.graph_objects as go
 import pandas as pd
-from front_end_pipeline.src.data import load_data
+from front_end_pipeline.src.data import load_data, load_synthetic_data
 
 
 def create_trends_chart(df: pd.DataFrame) -> go.Figure:
@@ -179,7 +179,6 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 if __name__ == "__main__":
-    me_data = load_data("openai-gpt-5", "wiki")
-    print(me_data['date'].value_counts())
-    fig = create_trends_chart(me_data)
-    fig.show()
+    chat_gpt_data = load_synthetic_data()
+    visual = create_trends_chart(chat_gpt_data)
+    visual.show()

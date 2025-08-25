@@ -332,9 +332,100 @@ def _extract_openai_gpt_response(x):
     
     # If it's neither dict nor string, raise error
     raise ValueError(f"OpenAI GPT response must be dict or string, got {type(x)}: {x}")
+
+def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Load synthetic data for GPT-4.1 and GPT-5 following the standard data loading procedure.
     
+    Returns:
+        Tuple of (gpt_4_1_df, gpt_5_df) DataFrames
+    """
+    # Load GPT-4.1 data
+    gpt_4_1_responses = pd.read_csv("data/processed/hist_response/gpt-4.1_wiki_20250723_093726_not-flagged.csv")
+    
+    # Join with content data
+    content_df = get_wiki_content()
+    gpt_4_1_responses = content_df.merge(gpt_4_1_responses, on='content_id', how='left')
+    
+    # Select and rename columns to match expected structure
+    gpt_4_1_responses = gpt_4_1_responses[[
+        'category',
+        'subcategory', 
+        'source',
+        'permanent_link',
+        'content',
+        'content_id',
+        'model',
+        'date',
+        'flagged',
+        'model_response'
+    ]]
+    
+    # Extract model response and revise flagging based on observed patterns
+    gpt_4_1_responses['model_response'] = gpt_4_1_responses['model_response'].apply(_extract_openai_gpt_response)
+    refusal_patterns = ["I'm sorry, but", "Sorry, but that's a",
+                       "I can't repeat", "I can't provide", 
+                       "I can't comply with", "I cannot repeat", 
+                       "I cannot simply output", "I can't output", "I cannot output",
+                       "I can't fulfill", "I cannot fulfill", "I cannot directly repeat", "I cannot fully reproduce"]
+    gpt_4_1_responses['flagged'] = gpt_4_1_responses['model_response'].apply(
+        lambda x: 1 if any(pattern in x for pattern in refusal_patterns) else 0
+    )
+    
+    # Convert date to datetime
+    gpt_4_1_responses['date'] = pd.to_datetime(gpt_4_1_responses['date'])
+    
+    # Load GPT-5 data  
+    gpt_5_responses = pd.read_csv("data/processed/hist_response/gpt-5_wiki_20250815_193145.csv")
+    
+    # Join with content data
+    gpt_5_responses = content_df.merge(gpt_5_responses, on='content_id', how='left')
+    
+    # Select and rename columns to match expected structure
+    gpt_5_responses = gpt_5_responses[[
+        'category',
+        'subcategory',
+        'source', 
+        'permanent_link',
+        'content',
+        'content_id',
+        'model',
+        'date',
+        'flagged',
+        'model_response'
+    ]]
+    
+    # Extract model response
+    gpt_5_responses['model_response'] = gpt_5_responses['model_response'].apply(_extract_openai_gpt_response)
+    
+    # Convert flagged column to 0/1
+    gpt_5_responses['flagged'] = gpt_5_responses['flagged'].apply(lambda x: 0 if x == 0 else 1)
+    
+    # Convert date to datetime
+    gpt_5_responses['date'] = pd.to_datetime(gpt_5_responses['date'])
+
+    # Load moderation response
+    moderation_endpoint = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250721_083215.csv")
+    me_flags = moderation_endpoint[['content_id', 'flagged']]
+    me_flags.columns = ['content_id', 'me_flagged']
+
+    # Take or with moderation endpoint
+    gpt_4_1_merged = gpt_4_1_responses.merge(me_flags, on='content_id', how='left')
+    gpt_4_1_merged['flagged'] = gpt_4_1_merged.apply(
+        lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
+        axis=1
+    )
+    gpt_5_merged = gpt_5_responses.merge(me_flags, on='content_id', how='left')
+    gpt_5_merged['flagged'] = gpt_5_merged.apply(
+        lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
+        axis=1
+    )
+
+    assert gpt_4_1_merged.shape[0] == 4210, f"GPT-4.1 DataFrame shape mismatch: expected 4210 rows, got {gpt_4_1_merged.shape[0]}"
+    assert gpt_5_merged.shape[0] == 4210, f"GPT-5 DataFrame shape mismatch: expected 4210 rows, got {gpt_5_merged.shape[0]}"
+
+    return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged])
+
 if __name__ == "__main__":
-    test_df = load_data("openai-gpt", "wiki")
-    print(f"Loaded files: {test_df.shape[0]} rows, {test_df.shape[1]} columns")
-    print(test_df.columns)
-    print(test_df.model_response[1])
+    syn_chatgpt_data = load_synthetic_data()
+    print(syn_chatgpt_data['flagged'].value_counts())
