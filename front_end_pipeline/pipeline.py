@@ -43,7 +43,7 @@ def run_pipeline():
     html_output = generate_dashboard_html(fig_input_dict)
     
     # Save HTML to file
-    output_path = Path("temp.html")
+    output_path = Path("index.html")
     
     # If there is index.html, rename it to index_old_timestamp.html
     if output_path.exists():
