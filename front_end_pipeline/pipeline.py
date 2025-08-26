@@ -1,6 +1,6 @@
 """Main pipeline orchestrator."""
 from datetime import datetime
-from front_end_pipeline.src.data import load_data, load_synthetic_data
+from front_end_pipeline.src.data import load_data
 from front_end_pipeline.src.charts import create_trends_chart
 from front_end_pipeline.src.html import generate_dashboard_html
 from pathlib import Path
@@ -12,7 +12,7 @@ def run_pipeline():
     df_deepseek_wiki = load_data("deepseek", "wiki")
     df_deepseek_cn_wiki = load_data("deepseek", "cn-wiki")
     df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
-    df_synthetic_chatgpt = load_synthetic_data()
+    # df_synthetic_chatgpt = load_synthetic_data()
 
     # Create charts
     fig_openaiME_wiki = create_trends_chart(df_openaiME_wiki)
@@ -20,7 +20,7 @@ def run_pipeline():
     fig_deepseek_wiki = create_trends_chart(df_deepseek_wiki)
     fig_deepseek_cn_wiki = create_trends_chart(df_deepseek_cn_wiki)
     fig_gpt5_wiki = create_trends_chart(df_gpt5_wiki)
-    fig_synthetic_chatgpt = create_trends_chart(df_synthetic_chatgpt)
+    # fig_synthetic_chatgpt = create_trends_chart(df_synthetic_chatgpt)
 
     # Name titles for plots
     title_openaiME_wiki = "OpenAI Moderation Endpoint Wikipedia Moderation Trends"
