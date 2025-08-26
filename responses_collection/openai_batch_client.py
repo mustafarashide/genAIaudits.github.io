@@ -722,12 +722,14 @@ if __name__ == "__main__":
         exit(1)
     
     print("=== OpenAI Batch Client Test ===")
-    client = OpenAIBatchClient(api_key=api_key)
+    client = OpenAIBatchClient(api_key=api_key, model="gpt-5")
     batch_list = client.list_batches(10)
     client.log_print(f"Found {len(batch_list)} batches:")
     for batch in batch_list:
         client.log_print(f"ID: {batch['id']}, Status: {batch['status']}, Created At: {batch['created_at']}")
 
     # Cancel the a batch with ID
-    #batch_id = "batch_68797491b5788190a0bbd7d1578fb66a"
-    #client.cancel_batch(batch_id)
+    # batch_id = "batch_68ae324c16508190ad4196623b03d542"
+    # id_2 = "batch_68ae36d50f548190bf613e91e310711b"
+    # client.cancel_batch(batch_id)
+    # client.cancel_batch(id_2)
