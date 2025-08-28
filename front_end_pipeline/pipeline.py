@@ -1,7 +1,7 @@
 """Main pipeline orchestrator."""
 from datetime import datetime
-from front_end_pipeline.src.data import load_data
-from front_end_pipeline.src.charts import create_trends_chart
+from front_end_pipeline.src.data import load_data, load_synthetic_data
+from front_end_pipeline.src.charts import create_trends_chart, create_synthetic_trends_chart
 from front_end_pipeline.src.html import generate_dashboard_html
 from pathlib import Path
 
@@ -12,7 +12,7 @@ def run_pipeline():
     df_deepseek_wiki = load_data("deepseek", "wiki")
     df_deepseek_cn_wiki = load_data("deepseek", "cn-wiki")
     df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
-    # df_synthetic_chatgpt = load_synthetic_data()
+    df_synthetic_chatgpt = load_synthetic_data()
 
     # Create charts
     fig_openaiME_wiki = create_trends_chart(df_openaiME_wiki)
@@ -20,7 +20,7 @@ def run_pipeline():
     fig_deepseek_wiki = create_trends_chart(df_deepseek_wiki)
     fig_deepseek_cn_wiki = create_trends_chart(df_deepseek_cn_wiki)
     fig_gpt5_wiki = create_trends_chart(df_gpt5_wiki)
-    # fig_synthetic_chatgpt = create_trends_chart(df_synthetic_chatgpt)
+    fig_synthetic_chatgpt = create_synthetic_trends_chart(df_synthetic_chatgpt)
 
     # Name titles for plots
     title_openaiME_wiki = "OpenAI Moderation Endpoint Wikipedia Moderation Trends"
@@ -32,16 +32,16 @@ def run_pipeline():
 
     # Generate HTML output
     fig_input_dict = {
-        title_openaiME_wiki: [fig_openaiME_wiki, df_openaiME_wiki],
-        # title_synthetic_chatgpt: [fig_synthetic_chatgpt, df_synthetic_chatgpt],
         title_openaiGPT_wiki: [fig_openaiGPT_wiki, df_openaiGPT_wiki],
         title_gpt5_wiki: [fig_gpt5_wiki, df_gpt5_wiki],
+        title_openaiME_wiki: [fig_openaiME_wiki, df_openaiME_wiki],
+        title_synthetic_chatgpt: [fig_synthetic_chatgpt, df_synthetic_chatgpt],
         title_deepseek_wiki: [fig_deepseek_wiki, df_deepseek_wiki],
         title_deepseek_cn_wiki: [fig_deepseek_cn_wiki, df_deepseek_cn_wiki],
     }
 
     html_output = generate_dashboard_html(fig_input_dict)
-    
+
     # Save HTML to file
     output_path = Path("index.html")
     
