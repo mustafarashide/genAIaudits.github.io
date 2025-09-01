@@ -100,6 +100,7 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
                     'source',
                     'permanent_link',
                     'content',
+                    'content_id',
                     'model',
                     'date',
                     'flagged',
@@ -342,11 +343,16 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     # Load GPT-4.1 data
     gpt_4_1_responses = pd.read_csv("data/processed/hist_response/gpt-4.1_wiki_20250723_093726_not-flagged.csv")
-    
+    gpt_4_1_second_responses = pd.read_csv("data/processed/hist_response/gpt-4.1_wiki_20250728_233227_not-flagged.csv")
+
     # Join with content data
     content_df = get_wiki_content()
     gpt_4_1_responses = content_df.merge(gpt_4_1_responses, on='content_id', how='left')
-    
+    gpt_4_1_second_responses = content_df.merge(gpt_4_1_second_responses, on='content_id', how='left')
+
+    # concat two responses
+    gpt_4_1_responses = pd.concat([gpt_4_1_responses, gpt_4_1_second_responses], ignore_index=True)
+
     # Select and rename columns to match expected structure
     gpt_4_1_responses = gpt_4_1_responses[[
         'category',
@@ -360,7 +366,7 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
         'flagged',
         'model_response'
     ]]
-    
+
     # Extract model response and revise flagging based on observed patterns
     gpt_4_1_responses['model_response'] = gpt_4_1_responses['model_response'].apply(_extract_openai_gpt_response)
     refusal_patterns = ["I'm sorry, but", "Sorry, but that's a",
@@ -376,38 +382,13 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     gpt_4_1_responses['date'] = pd.to_datetime(gpt_4_1_responses['date'])
     
     # Load GPT-5 data  
-    gpt_5_responses = pd.read_csv("data/processed/hist_response/gpt-5_wiki_20250815_193145.csv")
-    
-    # Join with content data
-    gpt_5_responses = content_df.merge(gpt_5_responses, on='content_id', how='left')
-    
-    # Select and rename columns to match expected structure
-    gpt_5_responses = gpt_5_responses[[
-        'category',
-        'subcategory',
-        'source', 
-        'permanent_link',
-        'content',
-        'content_id',
-        'model',
-        'date',
-        'flagged',
-        'model_response'
-    ]]
-    
-    # Extract model response
-    gpt_5_responses['model_response'] = gpt_5_responses['model_response'].apply(_extract_openai_gpt_response)
-    
-    # Convert flagged column to 0/1
-    gpt_5_responses['flagged'] = gpt_5_responses['flagged'].apply(lambda x: 0 if x == 0 else 1)
-    
-    # Convert date to datetime
-    gpt_5_responses['date'] = pd.to_datetime(gpt_5_responses['date'])
+    gpt_5_responses = load_data("openai-gpt-5", "wiki")
 
     # Load moderation response
     moderation_endpoint = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250721_083215.csv")
-    me_flags = moderation_endpoint[['content_id', 'flagged']]
-    me_flags.columns = ['content_id', 'me_flagged']
+    me_flags = moderation_endpoint[['content_id', 'flagged', 'model_response']]
+    me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
+    me_flags['me_model_response'] = me_flags['me_model_response'].apply(_extract_openai_gpt_response)
 
     # Take or with moderation endpoint
     gpt_4_1_merged = gpt_4_1_responses.merge(me_flags, on='content_id', how='left')
@@ -415,14 +396,23 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
         lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
         axis=1
     )
+    gpt_4_1_merged['model_response'] = gpt_4_1_merged.apply(
+        lambda x: (str(x["me_model_response"]) if pd.notnull(x["me_model_response"]) else "") +
+                (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
+        axis=1
+    )
     gpt_5_merged = gpt_5_responses.merge(me_flags, on='content_id', how='left')
     gpt_5_merged['flagged'] = gpt_5_merged.apply(
         lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
         axis=1
     )
+    gpt_5_merged['model_response'] = gpt_5_merged.apply(
+        lambda x: (str(x["me_model_response"]) if pd.notnull(x["me_model_response"]) else "") +
+                (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
+        axis=1
+    )
 
-    assert gpt_4_1_merged.shape[0] == 4210, f"GPT-4.1 DataFrame shape mismatch: expected 4210 rows, got {gpt_4_1_merged.shape[0]}"
-    assert gpt_5_merged.shape[0] == 4210, f"GPT-5 DataFrame shape mismatch: expected 4210 rows, got {gpt_5_merged.shape[0]}"
+    assert gpt_4_1_merged.shape[0] == 8420, f"GPT-4.1 DataFrame shape mismatch: expected 8420 rows, got {gpt_4_1_merged.shape[0]}"
 
     return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged])
 

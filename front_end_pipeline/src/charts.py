@@ -218,7 +218,7 @@ def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
         y1=1,
         yref="paper",  # Use paper coordinates for y-axis (0 to 1)
         line=dict(
-            color="red",
+            color="gray",
             width=2,
             dash="dash"
         )
@@ -243,9 +243,9 @@ def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
             y=y_pos,
             text="GPT-4.1",
             showarrow=False,
-            font=dict(size=14, color="blue"),
+            font=dict(size=14, color="gray"),
             bgcolor="rgba(255,255,255,0.8)",
-            bordercolor="blue",
+            bordercolor="gray",
             borderwidth=1
         )
         
@@ -255,9 +255,9 @@ def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
             y=y_pos,
             text="GPT-5",
             showarrow=False,
-            font=dict(size=14, color="green"),
+            font=dict(size=14, color="gray"),
             bgcolor="rgba(255,255,255,0.8)",
-            bordercolor="green",
+            bordercolor="gray",
             borderwidth=1
         )
     
