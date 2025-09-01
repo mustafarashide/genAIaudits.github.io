@@ -130,6 +130,8 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
                 df['model_response'] = df['model_response'].apply(_extract_openaiME_response)
             elif API == "openai-gpt":
                 df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
+            elif API == "openai-gpt-5":
+                df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
             elif API == "deepseek":
                 df['model_response'] = df['model_response'].apply(_extract_deepseek_response)
             
@@ -388,7 +390,9 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     moderation_endpoint = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250721_083215.csv")
     me_flags = moderation_endpoint[['content_id', 'flagged', 'model_response']]
     me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
-    me_flags['me_model_response'] = me_flags['me_model_response'].apply(_extract_openai_gpt_response)
+    me_flags['me_model_response'] = me_flags['me_model_response'].apply(_extract_openaiME_response)
+    # convert the list to string
+    me_flags['me_model_response'] = me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
 
     # Take or with moderation endpoint
     gpt_4_1_merged = gpt_4_1_responses.merge(me_flags, on='content_id', how='left')
