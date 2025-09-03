@@ -28,7 +28,7 @@ def run_pipeline():
     title_deepseek_wiki = "DeepSeek Chat Wikipedia Moderation Trends"
     title_deepseek_cn_wiki = "DeepSeek Chat Chinese Translated Wikipedia Moderation Trends"
     title_gpt5_wiki = "OpenAI GPT-5 Wikipedia Moderation Trends"
-    title_synthetic_chatgpt = "Synthetic ChatGPT Wikipedia Moderation Trends"
+    title_synthetic_chatgpt = "Emulated ChatGPT Wikipedia Moderation Trends"
 
     # Generate HTML output
     fig_input_dict = {
