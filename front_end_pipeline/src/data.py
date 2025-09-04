@@ -120,6 +120,7 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
                     'source',
                     'permanent_link',
                     'content',
+                    "content_id",
                     'model',
                     'date',
                     'flagged',
