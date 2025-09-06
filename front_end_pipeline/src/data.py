@@ -388,15 +388,20 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     gpt_5_responses = load_data("openai-gpt-5", "wiki")
 
     # Load moderation response
-    moderation_endpoint = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250721_083215.csv")
-    me_flags = moderation_endpoint[['content_id', 'flagged', 'model_response']]
-    me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
-    me_flags['me_model_response'] = me_flags['me_model_response'].apply(_extract_openaiME_response)
+    moderation_endpoint_pre_gpt5 = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250804_081838.csv")
+    moderation_endpoint_post_gpt5 = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250811_085437.csv")
+    pre_me_flags = moderation_endpoint_pre_gpt5[['content_id', 'flagged', 'model_response']]
+    post_me_flags = moderation_endpoint_post_gpt5[['content_id', 'flagged', 'model_response']]
+    pre_me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
+    post_me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
+    pre_me_flags['me_model_response'] = pre_me_flags['me_model_response'].apply(_extract_openaiME_response)
+    post_me_flags['me_model_response'] = post_me_flags['me_model_response'].apply(_extract_openaiME_response)
     # convert the list to string
-    me_flags['me_model_response'] = me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
+    pre_me_flags['me_model_response'] = pre_me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
+    post_me_flags['me_model_response'] = post_me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
 
     # Take or with moderation endpoint
-    gpt_4_1_merged = gpt_4_1_responses.merge(me_flags, on='content_id', how='left')
+    gpt_4_1_merged = gpt_4_1_responses.merge(pre_me_flags, on='content_id', how='left')
     gpt_4_1_merged['flagged'] = gpt_4_1_merged.apply(
         lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
         axis=1
@@ -408,7 +413,7 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
         (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
         axis=1
     )
-    gpt_5_merged = gpt_5_responses.merge(me_flags, on='content_id', how='left')
+    gpt_5_merged = gpt_5_responses.merge(post_me_flags, on='content_id', how='left')
     gpt_5_merged['flagged'] = gpt_5_merged.apply(
         lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
         axis=1
