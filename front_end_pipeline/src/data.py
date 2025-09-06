@@ -409,7 +409,7 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     gpt_4_1_merged['model_response'] = gpt_4_1_merged.apply(
         lambda x: "Moderation endpoint response: " + 
         (str(x["me_model_response"]) if pd.notnull(x["me_model_response"]) else "") +
-        "GPT-4.1 response: " +
+        " GPT-4.1 response: " +
         (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
         axis=1
     )
@@ -421,7 +421,7 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     gpt_5_merged['model_response'] = gpt_5_merged.apply(
         lambda x: "Moderation endpoint response: " +
         (str(x["me_model_response"]) if pd.notnull(x["me_model_response"]) else "") +
-        "GPT-5 response: " +
+        " GPT-5 response: " +
         (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
         axis=1
     )
