@@ -195,7 +195,38 @@ def _validate_and_concatenate(dataframes: List[pd.DataFrame]) -> pd.DataFrame:
     except Exception as e:
         raise ValueError(f"Error converting 'date' column to datetime: {str(e)}")
     
-    return combined_df
+    filtered_df = _filter_not_relevant_wiki(combined_df)
+
+    return filtered_df
+
+def _filter_not_relevant_wiki(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Helper function: Filter out rows that match 'Not relevant' entries from wiki_relevance.xlsx.
+    
+    Args:
+        df: DataFrame to filter
+    
+    Returns:
+        Filtered DataFrame
+    """
+    # Load 'Not relevant' entries
+    relevance_df = pd.read_excel("data/processed/wiki_relevance.xlsx")
+    not_relevant_df = relevance_df[relevance_df['relevance'] == 'Not relevant']
+    
+    # Columns to match on
+    match_cols = ['category', 'subcategory', 'source', 'permanent_link']
+    
+    # Merge and filter out matches
+    merged_df = df.merge(
+        not_relevant_df[match_cols],
+        on=match_cols,
+        how='left',
+        indicator=True
+    )
+    
+    filtered_df = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
+    
+    return filtered_df
 
 def _extract_openaiME_response(x):
     # Function to parse a single response

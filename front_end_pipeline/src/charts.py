@@ -332,8 +332,8 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     )
     df_hover['hovertext'] = df_hover.apply(
         lambda row: '<br>'.join(
-            f"{sc}: {rate:.1f}%" 
-            for sc, rate in zip(row['subcategory'], row['flag_rate'])
+            f"{sc}: {rate:.1f}% ({count} pages)"
+            for sc, rate, count in zip(row['subcategory'], row['flag_rate'], row['total_count'])
         ),
         axis=1
     )
