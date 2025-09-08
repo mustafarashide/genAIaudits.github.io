@@ -729,7 +729,5 @@ if __name__ == "__main__":
         client.log_print(f"ID: {batch['id']}, Status: {batch['status']}, Created At: {batch['created_at']}")
 
     # Cancel the a batch with ID
-    # batch_id = "batch_68ae324c16508190ad4196623b03d542"
-    # id_2 = "batch_68ae36d50f548190bf613e91e310711b"
+    # batch_id = "batch_68bf0f21329c8190b4699256d5b7302e"
     # client.cancel_batch(batch_id)
-    # client.cancel_batch(id_2)
