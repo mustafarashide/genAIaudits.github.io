@@ -8,7 +8,7 @@ from openai import OpenAI
 import pandas as pd
 import tiktoken  # Add this import for token counting
 
-class OpenAIBatchClient:
+class OpenAIBatchClient: 
     def __init__(self, api_key: str, model: str, endpoint: str = "/v1/chat/completions"):
         """
         Initialize OpenAI Batch Client
@@ -728,6 +728,15 @@ if __name__ == "__main__":
     for batch in batch_list:
         client.log_print(f"ID: {batch['id']}, Status: {batch['status']}, Created At: {batch['created_at']}")
 
+    # batch_info = {'id': 'batch_68c1f7e622b0819084ab45a43c8b4568', 'status': 'completed', 'created_at': 1757542374, 'expires_at': 1757628774, 'completed_at': 1757542780, 'failed_at': None, 'request_counts': {'completed': 0, 'failed': 1000, 'total': 1000}, 'output_file_id': None, 'error_file_id': 'file-3Dqgj68saygD4La2MqiYqr'}
+    # results = client.retrieve_batch_results(batch_info)
+    # # save to CSV
+    # results_df = pd.DataFrame(results)
+    # print(results_df.head())
+    # results_df.to_csv("responses_collection/response_variance/gpt5_test_batch_results.csv")
+
     # Cancel the a batch with ID
-    # batch_id = "batch_68bf0f21329c8190b4699256d5b7302e"
+    # batch_id = "batch_68c160a017708190b0d9164b95f5dbbd"
+    # batch_id_2 = "batch_68c10c69d52c819083ea232c855e5b76"
     # client.cancel_batch(batch_id)
+    # client.cancel_batch(batch_id_2)
