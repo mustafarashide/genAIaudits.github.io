@@ -175,18 +175,29 @@ class Pipeline:
         lengthy_refusals_ids = set()
         if temp_file.exists():
             existing_data = pd.read_csv(temp_file)
-            # Only consider IDs where flagged is not -1 or 2 (for lengthy refusals)
-            valid_processed = existing_data[(existing_data['flagged'] != -1) & (existing_data['flagged'] != 2)]
-            lengthy_refusals = existing_data[existing_data['flagged'] == 2]
+            
+            # Add truncated column if it doesn't exist
+            if 'truncated' not in existing_data.columns:
+                existing_data['truncated'] = False
+                
+            # Only consider IDs where flagged is not -1 or lengthy refusals without truncation
+            valid_processed = existing_data[
+                (existing_data['flagged'] != -1) & 
+                ~((existing_data['flagged'] == 2) & (existing_data['truncated'] == False))
+            ]
+            
+            # Find lengthy refusals that haven't been truncated yet
+            lengthy_refusals = existing_data[
+                (existing_data['flagged'] == 2) & (existing_data['truncated'] == False)
+            ]
             lengthy_refusals_ids = set(lengthy_refusals['content_id'])
             processed_ids = set(valid_processed['content_id'])
-            msg = f"Found {len(processed_ids)} previously processed items"
+            
+            msg = f"Found {len(processed_ids)} previously processed items, {len(lengthy_refusals_ids)} lengthy refusals to retry with truncation"
             self._log_and_print(msg, logger)
 
-            # drop -1 flagged items from existing data
-            existing_data = existing_data[existing_data['flagged'] != -1]
-            # Save existing data back to temp file without failed items
-            existing_data.to_csv(temp_file, mode='w', index=False)
+            # Save valid processed data back to temp file
+            valid_processed.to_csv(temp_file, mode='w', index=False)
         
         # Get remaining content IDs to process (maintaining sort order)
         remaining_ids = [content_id for content_id in all_content_ids if content_id not in processed_ids]
@@ -200,11 +211,12 @@ class Pipeline:
             batch_ids = remaining_ids[i:i + batch_size]
             batch = dataset[dataset['content_id'].isin(batch_ids)].copy().drop_duplicates(subset=['content_id'])
 
-            # Check if batch contains any lengthy refusals, if so, shorten it 
+            # Check if batch contains any lengthy refusals that need truncation
             mask = batch['content_id'].isin(lengthy_refusals_ids)
-            batch.loc[mask, 'content'] = batch.loc[mask, 'content'].str[:self.lengthy_refusal_truncation]
-            msg = f"found {len(batch[mask])} lengthy refusals in batch, shortening content to {self.lengthy_refusal_truncation} chars"
-            self._log_and_print(msg, logger)
+            if mask.any():
+                batch.loc[mask, 'content'] = batch.loc[mask, 'content'].str[:self.lengthy_refusal_truncation]
+                msg = f"Found {len(batch[mask])} lengthy refusals in batch, shortening content to {self.lengthy_refusal_truncation} chars"
+                self._log_and_print(msg, logger)
 
             try:
                 # Process batch through API with retry parameters
@@ -215,6 +227,9 @@ class Pipeline:
                     additional_sleep=additional_sleep,
                     max_retries=max_retries
                 )
+                
+                # Add truncation flag to processed batch
+                processed_batch['truncated'] = processed_batch['content_id'].isin(lengthy_refusals_ids)
                 
                 # Save progress
                 self._save_batch(processed_batch, temp_file)
@@ -227,7 +242,7 @@ class Pipeline:
                 self._log_and_print(error_msg, logger)
                 logger.error(error_msg)
                 raise
-    
+
         # Return combined results
         final_df = pd.read_csv(temp_file)  
         return final_df
