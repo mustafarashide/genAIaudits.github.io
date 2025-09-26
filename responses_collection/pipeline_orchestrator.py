@@ -35,6 +35,10 @@ class Pipeline:
         self.logs_dir = Path("responses_collection/logs")
         self.logs_dir.mkdir(parents=True, exist_ok=True)
         
+        # Create first lengthy refusal directory if it doesn't exist
+        self.first_len_refusal_dir = Path("data/processed/first_len_refusal")
+        self.first_len_refusal_dir.mkdir(parents=True, exist_ok=True)
+
     def _setup_logger(self, api_name: str, dataset_type: str) -> logging.Logger:
         """Setup logger for specific API and dataset combination"""
         # Create unique logger name
@@ -155,6 +159,29 @@ class Pipeline:
             return dataset # DeepSeek requires to repeat content
         raise ValueError(f"Unknown API: {api_name}")
     
+    def _save_first_lengthy_refusals(self, lengthy_refusals_df: pd.DataFrame, model_name: str, dataset_type: str, logger: logging.Logger) -> None:
+        """Save first lengthy refusals to a separate file"""
+        if lengthy_refusals_df.empty:
+            return
+            
+        # Create timestamp for filename
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{model_name}_{dataset_type}_{timestamp}.csv"
+        filepath = self.first_len_refusal_dir / filename
+        
+        # Add metadata columns
+        output_df = lengthy_refusals_df.copy()
+        output_df['model'] = model_name
+        output_df['dataset'] = dataset_type
+        output_df['date'] = datetime.datetime.now().strftime('%Y-%m-%d')
+        output_df['timestamp'] = timestamp
+        
+        # Save to file
+        output_df.to_csv(filepath, index=False)
+        
+        msg = f"✓ Saved {len(lengthy_refusals_df)} first lengthy refusals to {filepath}"
+        self._log_and_print(msg, logger)
+
     def _process_in_batches(
         self, 
         dataset: pd.DataFrame, 
@@ -195,6 +222,15 @@ class Pipeline:
             
             msg = f"Found {len(processed_ids)} previously processed items, {len(lengthy_refusals_ids)} lengthy refusals to retry with truncation"
             self._log_and_print(msg, logger)
+
+            # Save first lengthy refusals before overwriting temp file
+            if not lengthy_refusals.empty:
+                # Extract dataset type from temp_file path: {model}_{dataset}_temp.csv
+                temp_filename = temp_file.stem  # Gets filename without extension
+                model_name = self.config[api_name]['model']
+                # Remove model name and "_temp" suffix to get dataset type
+                dataset_type = temp_filename.replace(f"{model_name}_", "").replace("_temp", "")
+                self._save_first_lengthy_refusals(lengthy_refusals, model_name, dataset_type, logger)
 
             # Save valid processed data back to temp file
             valid_processed.to_csv(temp_file, mode='w', index=False)
