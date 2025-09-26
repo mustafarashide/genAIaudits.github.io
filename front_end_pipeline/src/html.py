@@ -437,16 +437,19 @@ def _get_css_content() -> str:
         @media (max-width: 1200px) {
             .charts-grid {
                 grid-template-columns: 1fr;
-                grid-template-rows: repeat(6, 400px);
+                grid-template-rows: repeat(6, 700px); /* Increased from 350px to 700px */
                 min-height: auto;
+                gap: 15px;
             }
-        }
-        
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-                grid-template-rows: repeat(6, 350px);
-                min-height: auto;
+            
+            .chart-container {
+                height: 660px; /* Ensure container height matches */
+                padding: 10px;
+            }
+            
+            .chart-container .plotly-graph-div {
+                height: 620px !important; 
+                min-height: 620px;
             }
         }
     """
