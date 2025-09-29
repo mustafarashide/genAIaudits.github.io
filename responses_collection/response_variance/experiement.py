@@ -7,8 +7,30 @@ import hashlib
 from pathlib import Path
 import time
 from datetime import datetime
+import logging
+
+# Setup logging
+log_dir = Path("responses_collection/response_variance/logs")
+log_dir.mkdir(parents=True, exist_ok=True)
+
+timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+log_file = log_dir / f"gpt4_1_variance_experiment_{timestamp}.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()  # Also log to console for debugging
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+logger.info("Starting GPT-4.1 variance experiment")
 
 # Prepare dataset
+logger.info("Loading wiki content dataset")
 wiki_df = get_wiki_content()
 target_subcategory = ["Abortion", "Israel Global Image"]
 target_df = wiki_df[wiki_df['subcategory'].isin(target_subcategory)].reset_index(drop=True)
@@ -27,7 +49,10 @@ duplicated_df['content_id_copy'] = duplicated_df['content_id']
 duplicated_df['duplicate_number'] = duplicated_df.groupby('content_id_copy').cumcount() + 1
 duplicated_df['content_id'] = duplicated_df['content_id_copy'] + '_' + duplicated_df['duplicate_number'].astype(str).str.zfill(3)
 
+logger.info(f"Prepared dataset with {len(duplicated_df)} items from {len(target_df)} original items")
+
 # Initialize client
+logger.info("Initializing OpenAI GPT-4.1 client")
 gpt4_1_client = OpenAIBatchClient(
     api_key=config["openai-gpt4.1"]["api_key"],
     model=config["openai-gpt4.1"]["model"],
@@ -38,15 +63,16 @@ gpt4_1_client = OpenAIBatchClient(
 batch_size = 100
 total_batches = len(duplicated_df) // batch_size + (1 if len(duplicated_df) % batch_size != 0 else 0)
 temp_file = "responses_collection/response_variance/gpt4_1_variance_responses_temp.csv"
-timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 final_file = f"responses_collection/response_variance/gpt4_1_variance_responses_{timestamp}.csv"
+
+logger.info(f"Batch processing parameters: batch_size={batch_size}, total_batches={total_batches}")
 
 # Check for resumeability
 processed_content_ids = set()
 start_batch = 0
 
 if Path(temp_file).exists():
-    print("Found existing temp file, checking for resumeability...")
+    logger.info("Found existing temp file, checking for resumeability...")
     existing_df = pd.read_csv(temp_file)
     processed_content_ids = set(existing_df['content_id'].tolist())
     
@@ -57,13 +83,13 @@ if Path(temp_file).exists():
         unprocessed_mask = duplicated_df['content_id'].isin(remaining_ids)
         first_unprocessed_idx = duplicated_df[unprocessed_mask].index[0]
         start_batch = first_unprocessed_idx // batch_size
-        print(f"Resuming from batch {start_batch + 1}, {len(processed_content_ids)} items already processed")
+        logger.info(f"Resuming from batch {start_batch + 1}, {len(processed_content_ids)} items already processed")
     else:
-        print("All items already processed, skipping to validation")
+        logger.info("All items already processed, skipping to validation")
         start_batch = total_batches
 
 # Process in batches
-print(f"Processing {len(duplicated_df)} items in {total_batches} batches of {batch_size}")
+logger.info(f"Processing {len(duplicated_df)} items in {total_batches} batches of {batch_size}")
 
 for batch_idx in range(start_batch, total_batches):
     start_idx = batch_idx * batch_size
@@ -74,10 +100,10 @@ for batch_idx in range(start_batch, total_batches):
     batch_df = batch_df[~batch_df['content_id'].isin(processed_content_ids)]
     
     if len(batch_df) == 0:
-        print(f"Batch {batch_idx + 1} already processed, skipping")
+        logger.info(f"Batch {batch_idx + 1} already processed, skipping")
         continue
     
-    print(f"Processing batch {batch_idx + 1}/{total_batches} ({len(batch_df)} items)")
+    logger.info(f"Processing batch {batch_idx + 1}/{total_batches} ({len(batch_df)} items)")
     
     # Process batch
     batch_responses = gpt4_1_client.process_dataset(batch_df)
@@ -96,7 +122,8 @@ for batch_idx in range(start_batch, total_batches):
     
     # Update processed set
     processed_content_ids.update(batch_responses_df['content_id'].tolist())
-    print(f"Batch {batch_idx + 1} completed, saved to temp file")
+    logger.info(f"Batch {batch_idx + 1} completed, saved to temp file")
+    logger.info("Sleeping for 5 minutes before next batch...")
     time.sleep(300)  # sleep for 5 minutes after processing a batch
 
 # Validation and retry loop
@@ -104,7 +131,7 @@ max_reruns = 3
 rerun_count = 0
 
 while rerun_count < max_reruns:
-    print(f"\n=== Validation Round {rerun_count + 1} ===")
+    logger.info(f"=== Validation Round {rerun_count + 1} ===")
     
     # Load all responses for validation
     all_responses_df = pd.read_csv(temp_file)
@@ -116,17 +143,17 @@ while rerun_count < max_reruns:
     error_count = error_mask.sum()
     lengthy_count = lengthy_refusal_mask.sum()
     
-    print(f"Total responses: {len(all_responses_df)}")
-    print(f"Error responses (-1 flag): {error_count}")
-    print(f"Lengthy refusals without truncation: {lengthy_count}")
+    logger.info(f"Total responses: {len(all_responses_df)}")
+    logger.info(f"Error responses (-1 flag): {error_count}")
+    logger.info(f"Lengthy refusals without truncation: {lengthy_count}")
     
     # If no issues, break the loop
     if error_count == 0 and lengthy_count == 0:
-        print("No issues found, validation complete!")
+        logger.info("No issues found, validation complete!")
         break
     
     if rerun_count >= max_reruns - 1:
-        print(f"Maximum reruns ({max_reruns}) reached, proceeding with current results")
+        logger.warning(f"Maximum reruns ({max_reruns}) reached, proceeding with current results")
         break
     
     # Save lengthy refusals before retry (if any exist)
@@ -141,7 +168,7 @@ while rerun_count < max_reruns:
         # Save to single file with timestamp
         lengthy_refusal_file = lengthy_refusal_dir / f"gpt4.1_variance_response_{timestamp}.csv"
         lengthy_refusals_df.to_csv(lengthy_refusal_file, index=False)
-        print(f"Saved {len(lengthy_refusals_df)} lengthy refusals to: {lengthy_refusal_file}")
+        logger.info(f"Saved {len(lengthy_refusals_df)} lengthy refusals to: {lengthy_refusal_file}")
     
     # Prepare retry data
     retry_mask = error_mask | lengthy_refusal_mask
@@ -170,7 +197,7 @@ while rerun_count < max_reruns:
     
     retry_df = pd.DataFrame(retry_df_list)
     
-    print(f"Retrying {len(retry_df)} failed responses...")
+    logger.info(f"Retrying {len(retry_df)} failed responses...")
     
     # Process retry batch
     retry_responses = gpt4_1_client.process_dataset(retry_df)
@@ -190,11 +217,11 @@ while rerun_count < max_reruns:
     # Save updated responses back to temp file
     all_responses_df.to_csv(temp_file, index=False)
     
-    print(f"Retry round {rerun_count + 1} completed")
+    logger.info(f"Retry round {rerun_count + 1} completed")
     rerun_count += 1
 
 # Final validation and save
-print("\n=== Final Results ===")
+logger.info("=== Final Results ===")
 final_responses_df = pd.read_csv(temp_file)
 
 final_error_count = (final_responses_df['flagged'] == -1).sum()
@@ -202,17 +229,18 @@ final_lengthy_count = (final_responses_df['flagged'] == 2).sum()
 truncated_count = (final_responses_df['truncated'] == True).sum()
 valid_count = len(final_responses_df) - final_error_count
 
-print(f"Total responses: {len(final_responses_df)}")
-print(f"Valid responses: {valid_count}")
-print(f"Remaining errors: {final_error_count}")
-print(f"Lengthy refusals: {final_lengthy_count}")
-print(f"Truncated responses: {truncated_count}")
-print(f"Total reruns performed: {rerun_count}")
+logger.info(f"Total responses: {len(final_responses_df)}")
+logger.info(f"Valid responses: {valid_count}")
+logger.info(f"Remaining errors: {final_error_count}")
+logger.info(f"Lengthy refusals: {final_lengthy_count}")
+logger.info(f"Truncated responses: {truncated_count}")
+logger.info(f"Total reruns performed: {rerun_count}")
 
 # Save final results with timestamp
 final_responses_df.to_csv(final_file, index=False)
-print(f"Final results saved to: {final_file}")
+logger.info(f"Final results saved to: {final_file}")
 
 # Clean up temp file
 Path(temp_file).unlink()
-print("Temp file cleaned up")
+logger.info("Temp file cleaned up")
+logger.info(f"Experiment completed. Log saved to: {log_file}")
