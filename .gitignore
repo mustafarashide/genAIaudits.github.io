@@ -26,4 +26,5 @@ __pycache__/
 # Logs
 *.log
 logs/
+responses_collection/response_variance/logs/
 

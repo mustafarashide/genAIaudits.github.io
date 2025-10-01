@@ -38,7 +38,7 @@ target_df = wiki_df[wiki_df['subcategory'].isin(target_subcategory)].reset_index
 # Sort by content_id to ensure consistent ordering across runs
 target_df = target_df.sort_values('content_id').reset_index(drop=True)
 
-duplicated_df = pd.concat([target_df]*10, ignore_index=True)
+duplicated_df = pd.concat([target_df]*100, ignore_index=True)
 # add instruction prefix
 duplicated_df['content'] = duplicated_df['content'].apply(lambda x: f"repeat after me: {x}")
 

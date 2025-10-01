@@ -12,6 +12,7 @@ if [ $((WEEK_NUM % 2)) -eq 1 ]; then
     echo "Week $WEEK_NUM is odd - running OpenAI GPT pipeline"
     python3 -m automation.scripts.timed_runner openai-gpt4.1
     python3 -m automation.scripts.timed_runner openai-gpt5
+    python3 -m responses_collection.response_variance.experiement
 else
     echo "Week $WEEK_NUM is even - skipping OpenAI GPT pipeline"
 fi
