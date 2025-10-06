@@ -740,3 +740,18 @@ Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 
+[main 08870a4] Update visualizations
+ 13 files changed, 59428 insertions(+), 4236 deletions(-)
+ create mode 100644 data/processed/first_len_refusal/gpt-4.1_wiki_20251006_124728.csv
+ rename data/processed/hist_response/{deepseek-chat_wiki_temp.csv => deepseek-chat_wiki_20251006_132717.csv} (96%)
+ create mode 100644 old_index_pages/index_old_20251006_133018.html
+error: cannot pull with rebase: You have unstaged changes.
+error: please commit or stash them.
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends.json is 72.95 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:genAIaudits/genAIaudits.github.io.git
+   deaf47a..08870a4  main -> main
+Renamed existing index.html to old_index_pages/index_old_20251006_133018.html
+Dashboard saved to index.html
+[2025-10-06 13:31:02] INFO: deepseek pipeline completed successfully
