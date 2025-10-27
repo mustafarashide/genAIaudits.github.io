@@ -1091,3 +1091,18 @@ Renamed existing index.html to old_index_pages/index_old_20251019_142709.html
 Dashboard saved to index.html
 [2025-10-19 14:27:46] INFO: deepseek pipeline completed successfully
 Week 43 is odd - skipping DeepSeek pipeline
+Week 44 is even - running DeepSeek pipeline
+[2025-10-27 01:00:02] INFO: Starting deepseek pipeline runner
+[2025-10-27 01:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 05:00. Discount hours: 16:30-00:30 UTC
+[2025-10-27 01:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 05:30. Discount hours: 16:30-00:30 UTC
+[2025-10-27 02:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 06:00. Discount hours: 16:30-00:30 UTC
+[2025-10-27 02:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 06:30. Discount hours: 16:30-00:30 UTC
+[2025-10-27 03:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 07:00. Discount hours: 16:30-00:30 UTC
+[2025-10-27 03:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 07:30. Discount hours: 16:30-00:30 UTC
+[2025-10-27 04:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 08:00. Discount hours: 16:30-00:30 UTC
+[2025-10-27 04:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 08:30. Discount hours: 16:30-00:30 UTC
+[2025-10-27 05:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 09:00. Discount hours: 16:30-00:30 UTC
+[2025-10-27 05:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 09:30. Discount hours: 16:30-00:30 UTC
+[2025-10-27 06:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 10:00. Discount hours: 16:30-00:30 UTC
+[2025-10-27 06:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 10:30. Discount hours: 16:30-00:30 UTC
+[2025-10-27 07:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 11:00. Discount hours: 16:30-00:30 UTC
