@@ -21,8 +21,8 @@ def extract_date(filepath):
 
 def calculate_ci_by_category(df, wiki_df):
     """Calculate mean and bootstrap CI for each category"""
-    # Join df with wiki_df
-    df = df.merge(wiki_df[['content_id', 'category']], 
+    # Join df with wiki_df to get both category and subcategory
+    df = df.merge(wiki_df[['content_id', 'category', 'subcategory']], 
                   left_on='content_id_copy', 
                   right_on='content_id', 
                   how='left')
@@ -31,6 +31,9 @@ def calculate_ci_by_category(df, wiki_df):
     
     for category in df['category'].unique():
         category_df = df[df['category'] == category].copy()
+        
+        # Get the subcategory for this category
+        subcategory = category_df['subcategory'].iloc[0]
         
         # Sort by content_id_copy first, then assign groups
         category_df = category_df.sort_values('content_id_copy').reset_index(drop=True)
@@ -53,7 +56,8 @@ def calculate_ci_by_category(df, wiki_df):
         results_by_category[category] = {
             'mean': mean,
             'ci_lower': ci[0],
-            'ci_upper': ci[1]
+            'ci_upper': ci[1],
+            'subcategory': subcategory
         }
     
     return results_by_category
@@ -75,6 +79,7 @@ for filepath in csv_files:
         results.append({
             'date': date,
             'category': category,
+            'subcategory': stats['subcategory'],
             'mean': stats['mean'],
             'ci_lower': stats['ci_lower'],
             'ci_upper': stats['ci_upper']
@@ -83,6 +88,7 @@ for filepath in csv_files:
         print(f"File: {filepath}")
         print(f"Date: {date}")
         print(f"Category: {category}")
+        print(f"Subcategory: {stats['subcategory']}")
         print(f"Mean: {stats['mean']:.4f}")
         print(f"Bootstrap 95% CI: [{stats['ci_lower']:.4f}, {stats['ci_upper']:.4f}]\n")
 
@@ -93,40 +99,56 @@ results_df = results_df.sort_values('date')
 # Create Plotly visualization
 fig = go.Figure()
 
-# Plot each category as a separate line
+# Define colors for each category
+colors = ['rgb(0,100,80)', 'rgb(220,20,60)']
+category_colors = dict(zip(results_df['category'].unique(), colors))
+
+# Plot each category as a separate line with shaded CI
 for category in results_df['category'].unique():
-    category_data = results_df[results_df['category'] == category]
+    category_data = results_df[results_df['category'] == category].sort_values('date')
     
     dates = category_data['date'].tolist()
     means = category_data['mean'].tolist()
-    ci_upper = (category_data['ci_upper'] - category_data['mean']).tolist()
-    ci_lower = (category_data['mean'] - category_data['ci_lower']).tolist()
+    ci_upper = category_data['ci_upper'].tolist()
+    ci_lower = category_data['ci_lower'].tolist()
+    subcategory = category_data['subcategory'].iloc[0]
     
-    # Add points with error bars
+    # Create custom hover text showing mean and CI bounds
+    hover_text = [f"Mean: {mean:.4f}<br>95% CI: [{lower:.4f}, {upper:.4f}]" 
+                  for mean, lower, upper in zip(means, ci_lower, ci_upper)]
+    
+    color = category_colors[category]
+    
+    # Add the main line with subcategory as name
     fig.add_trace(go.Scatter(
         x=dates,
         y=means,
         mode='markers+lines',
-        name=category,
-        marker=dict(size=12),
-        line=dict(width=2),
-        error_y=dict(
-            type='data',
-            symmetric=False,
-            array=ci_upper,
-            arrayminus=ci_lower,
-            thickness=2,
-            width=10
-        )
+        name=subcategory,
+        line=dict(color=color, width=2),
+        marker=dict(size=10),
+        hovertemplate='%{customdata}<extra></extra>',
+        customdata=hover_text
+    ))
+    
+    # Add shaded confidence interval
+    fig.add_trace(go.Scatter(
+        x=dates + dates[::-1],  # dates, then dates reversed
+        y=ci_upper + ci_lower[::-1],  # upper, then lower reversed
+        fill='toself',
+        fillcolor=color.replace('rgb', 'rgba').replace(')', ',0.2)'),
+        line=dict(color='rgba(255,255,255,0)'),
+        hoverinfo="skip",
+        showlegend=False
     ))
 
 fig.update_layout(
-    title="Mean Proportion Flagged Over Time by Category with Bootstrap 95% CI",
+    title="Mean Proportion Flagged Over Time by Subcategory with Bootstrap 95% CI",
     xaxis_title="Date",
     yaxis_title="Mean Proportion Flagged",
     showlegend=True,
     yaxis=dict(range=[0, 1]),
-    legend=dict(title="Category")
+    legend=dict(title="Subcategory")
 )
 
 # Save the plot
