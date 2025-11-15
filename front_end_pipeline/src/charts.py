@@ -90,6 +90,91 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
             customdata=category_data['hovertext']
         ))
     
+    # Check if model is deepseek-chat and add version transition lines
+    if 'model' in df.columns and (df['model'] == 'deepseek-chat').any():
+        transition_date_1 = pd.to_datetime('2025-08-21')
+        transition_date_2 = pd.to_datetime('2025-09-29')
+        
+        # Add vertical line at August 21st
+        fig.add_shape(
+            type="line",
+            x0=transition_date_1,
+            x1=transition_date_1,
+            y0=0,
+            y1=1,
+            yref="paper",
+            line=dict(
+                color="gray",
+                width=2,
+                dash="dash"
+            )
+        )
+        
+        # Add vertical line at September 29th
+        fig.add_shape(
+            type="line",
+            x0=transition_date_2,
+            x1=transition_date_2,
+            y0=0,
+            y1=1,
+            yref="paper",
+            line=dict(
+                color="gray",
+                width=2,
+                dash="dash"
+            )
+        )
+        
+        # Add annotations for version regions
+        if len(chart_data) > 0:
+            y_range = chart_data['flagging_rate'].max() - chart_data['flagging_rate'].min()
+            y_pos = chart_data['flagging_rate'].max() - 0.2 * y_range
+            
+            # Get date range for positioning annotations
+            min_date = chart_data['date'].min()
+            max_date = chart_data['date'].max()
+            
+            # Calculate positions for annotations
+            v3_pos = min_date + (transition_date_1 - min_date) / 2
+            v3_1_pos = transition_date_1 + (transition_date_2 - transition_date_1) / 2
+            v3_2_pos = transition_date_2 + (max_date - transition_date_2) / 2
+            
+            # v3 annotation (before Aug 21)
+            fig.add_annotation(
+                x=v3_pos,
+                y=y_pos,
+                text="v3",
+                showarrow=False,
+                font=dict(size=14, color="gray"),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="gray",
+                borderwidth=1
+            )
+            
+            # v3.1 annotation (Aug 21 - Sep 29)
+            fig.add_annotation(
+                x=v3_1_pos,
+                y=y_pos,
+                text="v3.1",
+                showarrow=False,
+                font=dict(size=14, color="gray"),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="gray",
+                borderwidth=1
+            )
+            
+            # v3.2 annotation (after Sep 29)
+            fig.add_annotation(
+                x=v3_2_pos,
+                y=y_pos,
+                text="v3.2",
+                showarrow=False,
+                font=dict(size=14, color="gray"),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="gray",
+                borderwidth=1
+            )
+    
     # Apply styling
     fig.update_layout(
         title="", # Set title in the main pipeline through static html 
@@ -348,6 +433,6 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 if __name__ == "__main__":
-    chat_gpt_data = load_synthetic_data()
-    visual = create_synthetic_trends_chart(chat_gpt_data)
-    visual.show()
+    df_deepseek_wiki = load_data("deepseek", "wiki")
+    fig_deepseek_wiki = create_trends_chart(df_deepseek_wiki)
+    fig_deepseek_wiki.show()

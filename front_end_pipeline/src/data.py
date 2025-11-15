@@ -462,5 +462,5 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged])
 
 if __name__ == "__main__":
-    syn_chatgpt_data = load_synthetic_data()
-    print(syn_chatgpt_data['flagged'].value_counts())
+    df_deepseek_wiki = load_data("deepseek", "wiki")
+    print(df_deepseek_wiki['model'][0])
