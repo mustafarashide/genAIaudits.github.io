@@ -1358,3 +1358,28 @@ Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
   post_me_flags['me_model_response'] = post_me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
+[main 6ee8dd7] Update visualizations
+ 11 files changed, 57990 insertions(+), 3955 deletions(-)
+ rename data/processed/hist_response/{deepseek-chat_cn-wiki_temp.csv => deepseek-chat_cn-wiki_20251114_135357.csv} (85%)
+ create mode 100644 old_index_pages/index_old_20251114_135805.html
+error: cannot pull with rebase: You have unstaged changes.
+error: please commit or stash them.
+remote: warning: File data/charts/OpenAI_Moderation_Endpoint_Wikipedia_Moderation_Trends.json is 60.33 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/Emulated_ChatGPT_Wikipedia_Moderation_Trends.json is 50.75 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: error: Trace: df63144f63bc6161cbb8ffcb7650f246b657767f1fecb6ac94dd227a2df50ac2        
+remote: error: See https://gh.io/lfs for more information.        
+remote: error: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends.json is 110.29 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:genAIaudits/genAIaudits.github.io.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'git@github.com:genAIaudits/genAIaudits.github.io.git'
+Renamed existing index.html to old_index_pages/index_old_20251114_135805.html
+Dashboard saved to index.html
+[2025-11-14 13:58:51] INFO: 📊 Running wiki dataset for deepseek
+[2025-11-14 19:30:02] WARNING: ⏰ DeepSeek discount time ended. Terminating subprocess...
+[2025-11-14 19:30:02] WARNING: Process was terminated due to discount time ending. Will retry when discount time resumes.
+[2025-11-14 19:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 00:30. Discount hours: 16:30-00:30 UTC
+[2025-11-14 19:30:12] ERROR: Error terminating process: 'NoneType' object has no attribute 'poll'
+[2025-11-14 20:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 01:00. Discount hours: 16:30-00:30 UTC
+[2025-11-14 20:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 01:30. Discount hours: 16:30-00:30 UTC
+[2025-11-14 21:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 02:00. Discount hours: 16:30-00:30 UTC
