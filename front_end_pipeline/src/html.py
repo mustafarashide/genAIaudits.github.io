@@ -38,7 +38,7 @@ def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/c
             
             df_for_js['model_response_full'] = df_for_js.apply(
                 lambda row: row['model_response'] if row['flagged'] != 0 
-                else (str(row['model_response'])[:300] + '...' if len(str(row['model_response'])) > 300 else str(row['model_response'])),
+                else (str(row['model_response'])[:150] + '...' if len(str(row['model_response'])) > 150 else str(row['model_response'])),
                 axis=1
             )
             
