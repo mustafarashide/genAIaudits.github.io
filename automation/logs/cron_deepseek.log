@@ -1383,3 +1383,4 @@ Dashboard saved to index.html
 [2025-11-14 20:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 01:00. Discount hours: 16:30-00:30 UTC
 [2025-11-14 20:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 01:30. Discount hours: 16:30-00:30 UTC
 [2025-11-14 21:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 02:00. Discount hours: 16:30-00:30 UTC
+Week 47 is odd - skipping DeepSeek pipeline
