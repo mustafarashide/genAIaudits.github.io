@@ -38,11 +38,11 @@ def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/c
             
             df_for_js['model_response_full'] = df_for_js.apply(
                 lambda row: row['model_response'] if row['flagged'] != 0 
-                else (str(row['model_response'])[:150] + '...' if len(str(row['model_response'])) > 150 else str(row['model_response'])),
+                else (str(row['model_response'])[:50] + '...' if len(str(row['model_response'])) > 50 else str(row['model_response'])),
                 axis=1
             )
             
-            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 100
+            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 25
             
             df_for_js['sort_order'] = df_for_js['flagged'].map({1: 1, 2: 2, 0: 3})
             df_for_js = df_for_js.sort_values(by=['sort_order', 'date'], ascending=[True, False])
