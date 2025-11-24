@@ -8,7 +8,9 @@ from responses_collection.data_processor import get_wiki_content
 # List of CSV files
 csv_files = [
     "responses_collection/response_variance/gpt4_1_variance_responses_20251007_222951.csv",
-    "responses_collection/response_variance/gpt4_1_variance_responses_20251020_100145.csv"
+    "responses_collection/response_variance/gpt4_1_variance_responses_20251020_100145.csv",
+    "responses_collection/response_variance/gpt4_1_variance_responses_20251103_124300.csv",
+    "responses_collection/response_variance/gpt4_1_variance_responses_20251117_101819.csv"
 ]
 
 def extract_date(filepath):
@@ -22,8 +24,12 @@ def extract_date(filepath):
 def calculate_ci_by_category(df, wiki_df):
     """Calculate mean and bootstrap CI for each category"""
     # Join df with wiki_df to get both category and subcategory
-    df = df.merge(wiki_df[['content_id', 'category', 'subcategory']], 
-                  left_on='content_id_copy', 
+    df['group'] = df['content_id'].apply(lambda x: x.split('_')[1])
+    df['content_id'] = df['content_id'].apply(lambda x: x.split('_')[0])
+    df['flagged_bool'] = df['flagged'].apply(lambda x: True if x >= 1 else False)
+
+    df = df.merge(wiki_df[['content_id','category', 'subcategory']], 
+                  left_on='content_id', 
                   right_on='content_id', 
                   how='left')
     
@@ -35,14 +41,8 @@ def calculate_ci_by_category(df, wiki_df):
         # Get the subcategory for this category
         subcategory = category_df['subcategory'].iloc[0]
         
-        # Sort by content_id_copy first, then assign groups
-        category_df = category_df.sort_values('content_id_copy').reset_index(drop=True)
-        
-        # Assign group based on the position within each content_id_copy's duplicates
-        category_df['group'] = category_df.groupby('content_id_copy').cumcount()
-        
         # Calculate mean for each group
-        group_means = category_df.groupby('group')['flagged'].mean().values
+        group_means = category_df.groupby('group')['flagged_bool'].mean().values
         
         # Bootstrap 95% confidence interval
         n_bootstrap = 10000
