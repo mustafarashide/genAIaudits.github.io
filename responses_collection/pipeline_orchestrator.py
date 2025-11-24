@@ -20,6 +20,7 @@ class Pipeline:
             "openai-me": 1/ config["openai-me"]["rate_limit"],  # OpenAI ME rate limit: 4 requests/second
             "openai-gpt4.1": 1/ config["openai-gpt4.1"]["rate_limit"],  # OpenAI GPT-4.1 rate limit: 60 requests/second
             "openai-gpt5": 1/ config["openai-gpt5"]["rate_limit"],  # OpenAI GPT-5 rate limit: 60 requests/second
+            "openai-gpt5.1": 1/ config["openai-gpt5.1"]["rate_limit"],  # OpenAI GPT-5.1 rate limit: 60 requests/second
             "deepseek": 1/ config["deepseek"]["rate_limit"]  # Deepseek rate limit: 10 requests/second
         }
 
