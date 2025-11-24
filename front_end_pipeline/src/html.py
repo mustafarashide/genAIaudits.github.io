@@ -8,13 +8,14 @@ import json
 from datetime import datetime
 import os
 
-def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/charts") -> None:
+def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/charts", max_size_mb: int = 90) -> None:
     """
-    Export chart data to separate JSON files.
+    Export chart data to separate JSON files, splitting large files into chunks.
     
     Args:
         fig_input_dict: Dict with title as key, [figure, dataframe] as value
         output_dir: Directory to save JSON files
+        max_size_mb: Maximum file size in MB before splitting
     """
     # Create output directory if it doesn't exist
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -38,11 +39,11 @@ def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/c
             
             df_for_js['model_response_full'] = df_for_js.apply(
                 lambda row: row['model_response'] if row['flagged'] != 0 
-                else (str(row['model_response'])[:50] + '...' if len(str(row['model_response'])) > 50 else str(row['model_response'])),
+                else (str(row['model_response'])[:300] + '...' if len(str(row['model_response'])) > 300 else str(row['model_response'])),
                 axis=1
             )
             
-            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 25
+            df_for_js['model_response_needs_expand'] = df_for_js['model_response_full'].str.len() > 150
             
             df_for_js['sort_order'] = df_for_js['flagged'].map({1: 1, 2: 2, 0: 3})
             df_for_js = df_for_js.sort_values(by=['sort_order', 'date'], ascending=[True, False])
@@ -53,27 +54,66 @@ def export_chart_data(fig_input_dict: Dict[str, List], output_dir: str = "data/c
             
             chart_data[title] = df_for_js.to_dict('records')
     
-    # Save individual chart data files
+    # Save individual chart data files with chunking
+    manifest_files = {}
+    max_bytes = max_size_mb * 1024 * 1024
+    
     for title, data in chart_data.items():
-        # Create safe filename from title
         safe_filename = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-        safe_filename = safe_filename.replace(' ', '_') + '.json'
+        safe_filename = safe_filename.replace(' ', '_')
         
-        file_path = Path(output_dir) / safe_filename
-        with open(file_path, 'w') as f:
-            json.dump({
-                'title': title,
-                'data': data,
-                'generated_at': datetime.now().isoformat(),
-                'count': len(data)
-            }, f, indent=2)
+        # Test size of full data
+        test_json = json.dumps({
+            'title': title,
+            'data': data,
+            'generated_at': datetime.now().isoformat(),
+            'count': len(data)
+        })
+        
+        if len(test_json.encode('utf-8')) > max_bytes:
+            # Split into chunks
+            chunk_size = len(data) // ((len(test_json.encode('utf-8')) // max_bytes) + 1)
+            chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
+            
+            chunk_files = []
+            for idx, chunk in enumerate(chunks):
+                chunk_filename = f"{safe_filename}_part{idx + 1}.json"
+                file_path = Path(output_dir) / chunk_filename
+                
+                with open(file_path, 'w') as f:
+                    json.dump({
+                        'title': title,
+                        'part': idx + 1,
+                        'total_parts': len(chunks),
+                        'data': chunk,
+                        'generated_at': datetime.now().isoformat(),
+                        'count': len(chunk),
+                        'total_count': len(data)
+                    }, f, indent=2)
+                
+                chunk_files.append(chunk_filename)
+            
+            manifest_files[title] = chunk_files
+        else:
+            # Single file
+            filename = safe_filename + '.json'
+            file_path = Path(output_dir) / filename
+            
+            with open(file_path, 'w') as f:
+                json.dump({
+                    'title': title,
+                    'data': data,
+                    'generated_at': datetime.now().isoformat(),
+                    'count': len(data)
+                }, f, indent=2)
+            
+            manifest_files[title] = [filename]
     
     # Create manifest file
     manifest = {
         'generated_at': datetime.now().isoformat(),
         'charts': list(chart_data.keys()),
-        'files': {title: "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_') + '.json' 
-                 for title in chart_data.keys()}
+        'files': manifest_files
     }
     
     with open(Path(output_dir) / 'manifest.json', 'w') as f:
@@ -490,18 +530,27 @@ def _get_js_content() -> str:
                     
                     // Load individual chart data files based on manifest
                     const dataPromises = window.chartTitles.map(async (title) => {
-                        const filename = manifest.files[title];
-                        if (!filename) {
+                        const filenames = manifest.files[title];
+                        if (!filenames || filenames.length === 0) {
                             console.warn(`No file mapping for chart: ${title}`);
                             return { title, data: [] };
                         }
                         
-                        const response = await fetch(`data/charts/${filename}`);
-                        if (!response.ok) {
-                            throw new Error(`Failed to load ${filename}: ${response.statusText}`);
-                        }
-                        const chartData = await response.json();
-                        return { title, data: chartData.data };
+                        // Load all chunks for this chart
+                        const chunkPromises = filenames.map(async (filename) => {
+                            const response = await fetch(`data/charts/${filename}`);
+                            if (!response.ok) {
+                                throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                            }
+                            return await response.json();
+                        });
+                        
+                        const chunks = await Promise.all(chunkPromises);
+                        
+                        // Combine all chunks
+                        const combinedData = chunks.flatMap(chunk => chunk.data);
+                        
+                        return { title, data: combinedData };
                     });
                     
                     const results = await Promise.all(dataPromises);
@@ -512,28 +561,8 @@ def _get_js_content() -> str:
                     });
                     
                 } catch (error) {
-                    console.error('Failed to load from manifest, falling back to direct file loading:', error);
-                    
-                    // Fallback: try to load files directly based on title
-                    const dataPromises = window.chartTitles.map(async (title) => {
-                        const safeFilename = title.replace(/[^a-zA-Z0-9 \\-_]/g, '').replace(/ /g, '_') + '.json';
-                        try {
-                            const response = await fetch(`data/charts/${safeFilename}`);
-                            if (!response.ok) {
-                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                            }
-                            const chartData = await response.json();
-                            return { title, data: chartData.data };
-                        } catch (fileError) {
-                            console.warn(`Failed to load ${safeFilename}:`, fileError);
-                            return { title, data: [] };
-                        }
-                    });
-                    
-                    const results = await Promise.all(dataPromises);
-                    results.forEach(({ title, data }) => {
-                        window.chartData[title] = data;
-                    });
+                    console.error('Failed to load from manifest:', error);
+                    throw error;
                 }
                 
                 console.log('Chart data loaded:', Object.keys(window.chartData));

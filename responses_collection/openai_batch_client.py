@@ -605,11 +605,15 @@ def _extract_flagged_status(model_response: str, model: str) -> int:
         flagged = 2 if any(phrase in model_response_extracted for phrase in length_refusal_phrases) else flagged
         return flagged
     
+    elif model == "gpt-5.1":
+        # Have not identified refusal phrases yet, so default to 0
+        return 0
+    
     return -1
 
-def test_process_dataset_with_gpt5():
+def test_process_dataset_with_gpt5_1():
     """
-    Test the process_dataset function with GPT-5 model
+    Test the process_dataset function with GPT-5.1 model
     """
     # Get API key from config
     try:
@@ -626,7 +630,7 @@ def test_process_dataset_with_gpt5():
     
     # Initialize client with GPT-5
     print("=== Testing OpenAI Batch Client with GPT-5 ===")
-    client = OpenAIBatchClient(api_key=api_key, model="gpt-5")
+    client = OpenAIBatchClient(api_key=api_key, model="gpt-5.1")
     
     # Create a small test dataset
     test_data = [
@@ -662,7 +666,7 @@ def test_process_dataset_with_gpt5():
     
     try:
         # Process the dataset
-        print("\nStarting batch processing with GPT-5...")
+        print("\nStarting batch processing with GPT-5.1...")
         results = client.process_dataset(test_df)
         
         # Validate results
@@ -686,7 +690,7 @@ def test_process_dataset_with_gpt5():
             except:
                 print(f"  Raw response: {result['model_response'][:100]}...")
         
-        print("\n✅ GPT-5 test completed successfully!")
+        print("\n✅ GPT-5.1 test completed successfully!")
         return True
         
     except Exception as e:
@@ -699,14 +703,14 @@ def test_process_dataset_with_gpt5():
         return False
 
 '''if __name__ == "__main__":
-    # Run both tests
-    print("Starting GPT-5 compatibility tests...\n")
+    # Run tests for GPT-5.1 compatibility
+    print("Starting GPT-5.1 compatibility tests...\n")
     
     # Run full process_dataset test
-    process_test_passed = test_process_dataset_with_gpt5()
+    process_test_passed = test_process_dataset_with_gpt5_1()
         
     if process_test_passed:
-        print("\n🎉 All GPT-5 tests passed! The batch client is compatible with GPT-5.")
+        print("\n🎉 All GPT-5.1 tests passed! The batch client is compatible with GPT-5.1.")
     else:
         print("\n⚠️ process_dataset test failed. Check the logs for details.")'''
 
