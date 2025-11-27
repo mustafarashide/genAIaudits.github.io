@@ -175,6 +175,62 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
                 borderwidth=1
             )
     
+    # Check if model is omni-moderation-latest and add transition line
+    if 'model' in df.columns and (df['model'] == 'omni-moderation-latest').any():
+        transition_date = pd.to_datetime('2024-09-26')
+        
+        # Add vertical line at September 26, 2024
+        fig.add_shape(
+            type="line",
+            x0=transition_date,
+            x1=transition_date,
+            y0=0,
+            y1=1,
+            yref="paper",
+            line=dict(
+                color="gray",
+                width=2,
+                dash="dash"
+            )
+        )
+        
+        # Add annotations for version regions
+        if len(chart_data) > 0:
+            y_range = chart_data['flagging_rate'].max() - chart_data['flagging_rate'].min()
+            y_pos = chart_data['flagging_rate'].max() - 0.1 * y_range
+            
+            # Get date range for positioning annotations
+            min_date = chart_data['date'].min()
+            max_date = chart_data['date'].max()
+            
+            # Calculate positions for annotations (two regions)
+            v1_pos = min_date + (transition_date - min_date) / 2
+            v2_pos = transition_date + (max_date - transition_date) / 2
+            
+            # Version 1 annotation (before Sep 26, 2024)
+            fig.add_annotation(
+                x=v1_pos,
+                y=y_pos,
+                text="text-moderation-latest",
+                showarrow=False,
+                font=dict(size=10, color="gray"),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="gray",
+                borderwidth=1
+            )
+            
+            # Version 2 annotation (after Sep 26, 2024)
+            fig.add_annotation(
+                x=v2_pos,
+                y=y_pos,
+                text="omni-moderation-latest",
+                showarrow=False,
+                font=dict(size=10, color="gray"),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="gray",
+                borderwidth=1
+            )
+    
     # Apply styling
     fig.update_layout(
         title="", # Set title in the main pipeline through static html 
@@ -208,13 +264,13 @@ def create_trends_chart(df: pd.DataFrame) -> go.Figure:
 
 def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
     """
-    Create trends chart for synthetic data showing GPT-4.1 to GPT-5 transition.
+    Create trends chart for synthetic data showing GPT-4.1 to GPT-5 to GPT-5.1 transition.
     
     Args:
         df: DataFrame with columns ['date', 'category', 'flagged', 'model']
     
     Returns:
-        Plotly Figure object with transition line on August 7th
+        Plotly Figure object with transition lines on August 7th and November 12th
     """
     # Handle empty DataFrame
     if df.empty:
@@ -292,16 +348,33 @@ def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
             customdata=category_data['hovertext']
         ))
     
-    # Add vertical line at August 7th to show transition using add_shape instead of add_vline
-    transition_date = pd.to_datetime('2025-08-07')
+    # Add vertical lines for model transitions
+    transition_date_1 = pd.to_datetime('2025-08-07')  # GPT-4.1 to GPT-5
+    transition_date_2 = pd.to_datetime('2025-11-12')  # GPT-5 to GPT-5.1
     
+    # Add first vertical line (Aug 7)
     fig.add_shape(
         type="line",
-        x0=transition_date,
-        x1=transition_date,
+        x0=transition_date_1,
+        x1=transition_date_1,
         y0=0,
         y1=1,
-        yref="paper",  # Use paper coordinates for y-axis (0 to 1)
+        yref="paper",
+        line=dict(
+            color="gray",
+            width=2,
+            dash="dash"
+        )
+    )
+    
+    # Add second vertical line (Nov 12)
+    fig.add_shape(
+        type="line",
+        x0=transition_date_2,
+        x1=transition_date_2,
+        y0=0,
+        y1=1,
+        yref="paper",
         line=dict(
             color="gray",
             width=2,
@@ -318,13 +391,14 @@ def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
         min_date = chart_data['date'].min()
         max_date = chart_data['date'].max()
         
-        # Calculate positions for annotations
-        left_pos = min_date + (transition_date - min_date) / 2
-        right_pos = transition_date + (max_date - transition_date) / 2
+        # Calculate positions for annotations (three regions now)
+        gpt41_pos = min_date + (transition_date_1 - min_date) / 2
+        gpt5_pos = transition_date_1 + (transition_date_2 - transition_date_1) / 2
+        gpt51_pos = transition_date_2 + (max_date - transition_date_2) / 2
         
-        # Left side annotation (GPT-4.1)
+        # GPT-4.1 annotation (before Aug 7)
         fig.add_annotation(
-            x=left_pos,
+            x=gpt41_pos,
             y=y_pos,
             text="GPT-4.1",
             showarrow=False,
@@ -334,11 +408,23 @@ def create_synthetic_trends_chart(df: pd.DataFrame) -> go.Figure:
             borderwidth=1
         )
         
-        # Right side annotation (GPT-5)
+        # GPT-5 annotation (Aug 7 - Nov 12)
         fig.add_annotation(
-            x=right_pos,
+            x=gpt5_pos,
             y=y_pos,
             text="GPT-5",
+            showarrow=False,
+            font=dict(size=14, color="gray"),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="gray",
+            borderwidth=1
+        )
+        
+        # GPT-5.1 annotation (after Nov 12)
+        fig.add_annotation(
+            x=gpt51_pos,
+            y=y_pos,
+            text="GPT-5.1",
             showarrow=False,
             font=dict(size=14, color="gray"),
             bgcolor="rgba(255,255,255,0.8)",
@@ -433,6 +519,7 @@ def _prepare_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 if __name__ == "__main__":
-    df_deepseek_wiki = load_data("deepseek", "wiki")
-    fig_deepseek_wiki = create_trends_chart(df_deepseek_wiki)
-    fig_deepseek_wiki.show()
+    df_openaiME_wiki = load_data("openai-me", "wiki")
+    fig = create_trends_chart(df_openaiME_wiki)
+    fig.show()
+

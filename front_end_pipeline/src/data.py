@@ -368,12 +368,13 @@ def _extract_openai_gpt_response(x):
     # If it's neither dict nor string, raise error
     raise ValueError(f"OpenAI GPT response must be dict or string, got {type(x)}: {x}")
 
-def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_synthetic_data() -> pd.DataFrame:
     """
-    Load synthetic data for GPT-4.1 and GPT-5 following the standard data loading procedure.
+    Load synthetic data for GPT-4.1, GPT-5, and GPT-5.1 following the standard data loading procedure.
+    Filters GPT-5 data to only include dates before Nov 12, 2025.
     
     Returns:
-        Tuple of (gpt_4_1_df, gpt_5_df) DataFrames
+        Combined DataFrame with all synthetic model data
     """
     # Load GPT-4.1 data
     gpt_4_1_responses = pd.read_csv("data/processed/hist_response/gpt-4.1_wiki_20250723_093726_not-flagged.csv")
@@ -415,21 +416,55 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     # Convert date to datetime
     gpt_4_1_responses['date'] = pd.to_datetime(gpt_4_1_responses['date'])
     
-    # Load GPT-5 data  
+    # Load GPT-5 data and filter to before Nov 12, 2025
     gpt_5_responses = load_data("openai-gpt-5", "wiki")
+    gpt_5_responses = gpt_5_responses[gpt_5_responses['date'] < '2025-11-12']
+
+    # Load GPT-5.1 data
+    gpt_5_1_responses = pd.read_csv("data/processed/hist_response/gpt-5.1_wiki_20251127_093513.csv")
+    gpt_5_1_responses = content_df.merge(gpt_5_1_responses, on='content_id', how='left')
+    
+    # Select and rename columns to match expected structure
+    gpt_5_1_responses = gpt_5_1_responses[[
+        'category',
+        'subcategory', 
+        'source',
+        'permanent_link',
+        'content',
+        'content_id',
+        'model',
+        'date',
+        'flagged',
+        'model_response'
+    ]]
+    
+    # Extract model response and revise flagging based on observed patterns
+    gpt_5_1_responses['model_response'] = gpt_5_1_responses['model_response'].apply(_extract_openai_gpt_response)
+    
+    # Convert date to datetime
+    gpt_5_1_responses['date'] = pd.to_datetime(gpt_5_1_responses['date'])
 
     # Load moderation response
     moderation_endpoint_pre_gpt5 = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250804_081838.csv")
     moderation_endpoint_post_gpt5 = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20250811_085437.csv")
+    moderation_endpoint_post_gpt51 = pd.read_csv("data/processed/hist_response/omni-moderation-latest_wiki_20251117_070314.csv")
+    
     pre_me_flags = moderation_endpoint_pre_gpt5[['content_id', 'flagged', 'model_response']]
     post_me_flags = moderation_endpoint_post_gpt5[['content_id', 'flagged', 'model_response']]
+    post_me_51_flags = moderation_endpoint_post_gpt51[['content_id', 'flagged', 'model_response']]
+    
     pre_me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
     post_me_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
+    post_me_51_flags.columns = ['content_id', 'me_flagged', 'me_model_response']
+    
     pre_me_flags['me_model_response'] = pre_me_flags['me_model_response'].apply(_extract_openaiME_response)
     post_me_flags['me_model_response'] = post_me_flags['me_model_response'].apply(_extract_openaiME_response)
+    post_me_51_flags['me_model_response'] = post_me_51_flags['me_model_response'].apply(_extract_openaiME_response)
+    
     # convert the list to string
     pre_me_flags['me_model_response'] = pre_me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
     post_me_flags['me_model_response'] = post_me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
+    post_me_51_flags['me_model_response'] = post_me_51_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
 
     # Take or with moderation endpoint
     gpt_4_1_merged = gpt_4_1_responses.merge(pre_me_flags, on='content_id', how='left')
@@ -444,6 +479,7 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
         (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
         axis=1
     )
+    
     gpt_5_merged = gpt_5_responses.merge(post_me_flags, on='content_id', how='left')
     gpt_5_merged['flagged'] = gpt_5_merged.apply(
         lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
@@ -456,11 +492,25 @@ def load_synthetic_data() -> tuple[pd.DataFrame, pd.DataFrame]:
         (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
         axis=1
     )
+    
+    gpt_5_1_merged = gpt_5_1_responses.merge(post_me_51_flags, on='content_id', how='left')
+    gpt_5_1_merged['flagged'] = gpt_5_1_merged.apply(
+        lambda x: 1 if x['flagged'] == 1 or x['me_flagged'] == 1 else 0,
+        axis=1
+    )
+    gpt_5_1_merged['model_response'] = gpt_5_1_merged.apply(
+        lambda x: "Moderation endpoint response: " +
+        (str(x["me_model_response"]) if pd.notnull(x["me_model_response"]) else "") +
+        " GPT-5.1 response: " +
+        (str(x['model_response']) if pd.notnull(x['model_response']) else ""),
+        axis=1
+    )
 
     assert gpt_4_1_merged.shape[0] == 8420, f"GPT-4.1 DataFrame shape mismatch: expected 8420 rows, got {gpt_4_1_merged.shape[0]}"
 
-    return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged])
+    return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged, gpt_5_1_merged])
 
 if __name__ == "__main__":
-    df_deepseek_wiki = load_data("deepseek", "wiki")
-    print(df_deepseek_wiki['model'][0])
+    df = load_synthetic_data()
+    print(df.columns)
+    print(df['model'].value_counts())
