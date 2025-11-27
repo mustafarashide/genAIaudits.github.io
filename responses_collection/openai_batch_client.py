@@ -606,8 +606,21 @@ def _extract_flagged_status(model_response: str, model: str) -> int:
         return flagged
     
     elif model == "gpt-5.1":
-        # Have not identified refusal phrases yet, so default to 0
-        return 0
+        # Check for specific phrases in GPT-5.1 responses
+        refusal_phrases = ["I can’t repeat", "I cannot repeat", 
+                   "I can’t simply repeat", "I can’t verbatim repeat",
+                   "I’m not able to repeat", "I am not able to repeat",
+                   "I’m not able to simply repeat", "I’m not able to just repeat",
+                   "I’m not able to directly repeat", "I’m not able to state"
+                   ]
+        flagged = 1 if any(pattern in model_response_extracted for pattern in refusal_phrases) else 0
+
+        # Further check if response get flagged because of length phrases
+        length_refusal_phrases = ["it’s extremely long", "it’s part of a longer passage",
+                          "it’s a long block of text"]
+        # Flag can only be 2 if only length phrases are present
+        flagged = 2 if any(phrase in model_response_extracted for phrase in length_refusal_phrases) else flagged
+        return flagged
     
     return -1
 
