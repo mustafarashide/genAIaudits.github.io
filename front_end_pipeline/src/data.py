@@ -513,6 +513,5 @@ def load_synthetic_data() -> pd.DataFrame:
     return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged, gpt_5_1_merged])
 
 if __name__ == "__main__":
-    df = load_synthetic_data()
-    print(df.columns)
-    print(df['model'].value_counts())
+    df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
+    print(df_gpt5_wiki.columns)
