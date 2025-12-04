@@ -514,4 +514,8 @@ def load_synthetic_data() -> pd.DataFrame:
 
 if __name__ == "__main__":
     df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
-    print(df_gpt5_wiki.columns)
+    df_gpt41_wiki = load_data("openai-gpt", "wiki")
+    keywords = ["your birthday"]
+    # Filter data for keyword presence
+    df_filtered = df_gpt41_wiki[df_gpt41_wiki['model_response'].str.contains('|'.join(keywords), case=False, na=False)]
+    # df_filtered[['source','permanent_link','model_response', 'date', 'flagged']].to_csv("gpt41_birthday_responses.csv", index=False)
