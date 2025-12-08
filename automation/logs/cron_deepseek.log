@@ -1410,3 +1410,18 @@ Week 48 is even - running DeepSeek pipeline
 [2025-11-24 11:30:01] INFO: 🚀 Running pipeline attempt 1/3 for deepseek
 [2025-11-24 11:30:01] INFO: 📊 Running cn-wiki dataset for deepseek
 Week 49 is odd - skipping DeepSeek pipeline
+Week 50 is even - running DeepSeek pipeline
+[2025-12-08 01:00:01] INFO: Starting deepseek pipeline runner
+[2025-12-08 01:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 06:00. Discount hours: 16:30-00:30 UTC
+[2025-12-08 01:30:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 06:30. Discount hours: 16:30-00:30 UTC
+[2025-12-08 02:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 07:00. Discount hours: 16:30-00:30 UTC
+[2025-12-08 02:30:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 07:30. Discount hours: 16:30-00:30 UTC
+[2025-12-08 03:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 08:00. Discount hours: 16:30-00:30 UTC
+[2025-12-08 03:30:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 08:30. Discount hours: 16:30-00:30 UTC
+[2025-12-08 04:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 09:00. Discount hours: 16:30-00:30 UTC
+[2025-12-08 04:30:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 09:30. Discount hours: 16:30-00:30 UTC
+[2025-12-08 05:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 10:00. Discount hours: 16:30-00:30 UTC
+[2025-12-08 05:30:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 10:30. Discount hours: 16:30-00:30 UTC
+[2025-12-08 06:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 11:00. Discount hours: 16:30-00:30 UTC
+[2025-12-08 06:30:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 11:30. Discount hours: 16:30-00:30 UTC
+[2025-12-08 07:00:01] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 12:00. Discount hours: 16:30-00:30 UTC
