@@ -23,6 +23,7 @@ class PipelineRunner:
         
     def _is_deepseek_discount_time(self) -> bool:
         """Check if current UTC time is within DeepSeek discount hours (16:30 - 00:30 UTC)"""
+        '''Notice deepseek no longer has discount hours as of 2025-12-08, so always return True
         if self.api_type.lower() != 'deepseek':
             return True  # No time restriction for other APIs
             
@@ -37,7 +38,8 @@ class PipelineRunner:
         if current_time >= start_time or current_time <= end_time:
             return True
         else:
-            return False
+            return False'''
+        return True
     
     def _wait_for_discount_time(self):
         """Wait until DeepSeek discount time begins"""

@@ -20,7 +20,7 @@ def load_data(API: str, dataset_type: str, data_path: str = "data/processed/hist
         Validated and concatenated DataFrame
     """
     # Validate API and dataset_type
-    valid_APIs = ["openai-me", "openai-gpt", "deepseek", "openai-gpt-5"]
+    valid_APIs = ["openai-me", "openai-gpt", "deepseek", "openai-gpt-5", "openai-gpt-5.1"]
     if API not in valid_APIs:
         raise ValueError(f"Invalid API: {API}. Must be one of {valid_APIs}")
     
@@ -52,6 +52,7 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
         "openai-me": ["omni-moderation-latest", "text-moderation-007"],
         "openai-gpt": ["gpt-4.1"],
         "openai-gpt-5": ["gpt-5"],
+        "openai-gpt-5.1": ["gpt-5.1"],
         "deepseek": ["deepseek-chat"]
     }
     
@@ -132,6 +133,8 @@ def _load_csv_files(data_path: str, API: str, dataset_type: str) -> List[pd.Data
             elif API == "openai-gpt":
                 df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
             elif API == "openai-gpt-5":
+                df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
+            elif API == "openai-gpt-5.1":
                 df['model_response'] = df['model_response'].apply(_extract_openai_gpt_response)
             elif API == "deepseek":
                 df['model_response'] = df['model_response'].apply(_extract_deepseek_response)
@@ -421,8 +424,7 @@ def load_synthetic_data() -> pd.DataFrame:
     gpt_5_responses = gpt_5_responses[gpt_5_responses['date'] < '2025-11-12']
 
     # Load GPT-5.1 data
-    gpt_5_1_responses = pd.read_csv("data/processed/hist_response/gpt-5.1_wiki_20251127_093513.csv")
-    gpt_5_1_responses = content_df.merge(gpt_5_1_responses, on='content_id', how='left')
+    gpt_5_1_responses = load_data("openai-gpt-5.1", "wiki")
     
     # Select and rename columns to match expected structure
     gpt_5_1_responses = gpt_5_1_responses[[
