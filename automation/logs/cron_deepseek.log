@@ -1691,3 +1691,49 @@ Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
   pre_me_flags['me_model_response'] = pre_me_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
+[main e902612] Update visualizations
+ 14 files changed, 194975 insertions(+), 137330 deletions(-)
+ create mode 100644 data/processed/hist_response/deepseek-chat_cn-wiki_20251214_161316.csv
+ delete mode 100644 data/processed/hist_response/deepseek-chat_cn-wiki_temp.csv
+ create mode 100644 old_index_pages/index_old_20251214_161818.html
+error: cannot pull with rebase: You have unstaged changes.
+error: please commit or stash them.
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends_part2.json is 67.41 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/Emulated_ChatGPT_Wikipedia_Moderation_Trends.json is 50.72 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/OpenAI_Moderation_Endpoint_Wikipedia_Moderation_Trends.json is 71.82 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends_part1.json is 67.86 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:genAIaudits/genAIaudits.github.io.git
+   e1ad0bd..e902612  main -> main
+Renamed existing index.html to old_index_pages/index_old_20251214_161818.html
+Dashboard saved to index.html
+[2025-12-14 16:19:08] INFO: 📊 Running wiki dataset for deepseek
+[2025-12-14 19:30:02] WARNING: ⏰ DeepSeek discount time ended. Terminating subprocess...
+[2025-12-14 19:30:02] WARNING: Process was terminated due to discount time ending. Will retry when discount time resumes.
+[2025-12-14 19:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 00:30. Discount hours: 16:30-00:30 UTC
+[2025-12-14 19:30:12] ERROR: Error terminating process: 'NoneType' object has no attribute 'poll'
+[2025-12-14 20:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 01:00. Discount hours: 16:30-00:30 UTC
+[2025-12-14 20:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 01:30. Discount hours: 16:30-00:30 UTC
+[2025-12-14 21:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 02:00. Discount hours: 16:30-00:30 UTC
+[2025-12-14 21:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 02:30. Discount hours: 16:30-00:30 UTC
+[2025-12-14 22:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 03:00. Discount hours: 16:30-00:30 UTC
+[2025-12-14 22:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 03:30. Discount hours: 16:30-00:30 UTC
+[2025-12-14 23:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 04:00. Discount hours: 16:30-00:30 UTC
+[2025-12-14 23:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 04:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 00:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 05:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 00:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 05:30. Discount hours: 16:30-00:30 UTC
+Week 51 is odd - skipping DeepSeek pipeline
+[2025-12-15 01:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 06:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 01:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 06:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 02:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 07:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 02:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 07:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 03:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 08:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 03:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 08:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 04:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 09:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 04:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 09:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 05:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 10:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 05:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 10:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 06:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 11:00. Discount hours: 16:30-00:30 UTC
+[2025-12-15 06:30:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 11:30. Discount hours: 16:30-00:30 UTC
+[2025-12-15 07:00:02] INFO: ⏰ Waiting for DeepSeek discount hours. Current UTC time: 12:00. Discount hours: 16:30-00:30 UTC
