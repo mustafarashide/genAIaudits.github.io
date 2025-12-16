@@ -1796,3 +1796,25 @@ Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 
+[main caad1c1] Update visualizations
+ 17 files changed, 58380 insertions(+), 3113 deletions(-)
+ rename data/processed/hist_response/{deepseek-chat_wiki_temp.csv => deepseek-chat_wiki_20251215_143204.csv} (88%)
+ create mode 100644 data/processed/hist_response/gpt-5.1_wiki_temp.csv
+ create mode 100644 data/processed/hist_response/gpt-5.1_wiki_temp_not-flagged.csv
+ create mode 100644 old_index_pages/index_old_20251215_143718.html
+ create mode 100644 responses_collection/batch_files/batch_input_20251215_105021.jsonl
+ create mode 100644 responses_collection/batch_files/batch_input_20251215_135536.jsonl
+error: cannot pull with rebase: You have unstaged changes.
+error: please commit or stash them.
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File data/charts/OpenAI_Moderation_Endpoint_Wikipedia_Moderation_Trends.json is 74.69 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends_part1.json is 67.86 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends_part2.json is 67.41 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/DeepSeek_Chat_Wikipedia_Moderation_Trends.json is 50.57 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/Emulated_ChatGPT_Wikipedia_Moderation_Trends.json is 50.72 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:genAIaudits/genAIaudits.github.io.git
+   4fa22dd..caad1c1  main -> main
+Renamed existing index.html to old_index_pages/index_old_20251215_143718.html
+Dashboard saved to index.html
+[2025-12-15 14:38:09] INFO: deepseek pipeline completed successfully
