@@ -512,10 +512,53 @@ def load_synthetic_data() -> pd.DataFrame:
 
     return _validate_and_concatenate([gpt_4_1_merged, gpt_5_merged, gpt_5_1_merged])
 
+def table_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Take in a df, groupby date, summarize the the count, num of flags and flag rate.
+    
+    Args:
+        df: DataFrame with 'date' and 'flagged' columns
+    
+    Returns:
+        Summary DataFrame
+    """
+    df['date'] = pd.to_datetime(df['date'])
+    summary = df.groupby('date').agg(
+        total_responses=('flagged', 'count'),
+        num_flagged=('flagged', 'sum')
+    ).reset_index()
+    summary['flag_rate'] = summary['num_flagged'] / summary['total_responses']
+    return summary
+
 if __name__ == "__main__":
-    df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
-    df_gpt41_wiki = load_data("openai-gpt", "wiki")
-    keywords = ["your birthday"]
-    # Filter data for keyword presence
-    df_filtered = df_gpt41_wiki[df_gpt41_wiki['model_response'].str.contains('|'.join(keywords), case=False, na=False)]
-    # df_filtered[['source','permanent_link','model_response', 'date', 'flagged']].to_csv("gpt41_birthday_responses.csv", index=False)
+    df_openaiME_wiki = load_data("openai-me", "wiki")
+    # df_openaiGPT_wiki = load_data("openai-gpt", "wiki")
+    # df_deepseek_wiki = load_data("deepseek", "wiki")
+    # df_deepseek_cn_wiki = load_data("deepseek", "cn-wiki")
+    # df_gpt5_wiki = load_data("openai-gpt-5", "wiki")
+    # Load GPT-5.1 data
+    # gpt_5_1_responses = pd.read_csv("data/processed/hist_response/gpt-5.1_wiki_20251127_093513.csv")
+    # content_df = get_wiki_content()
+    # gpt_5_1_responses = content_df.merge(gpt_5_1_responses, on='content_id', how='left')
+    
+    # # Select and rename columns to match expected structure
+    # gpt_5_1_responses = gpt_5_1_responses[[
+    #     'category',
+    #     'subcategory', 
+    #     'source',
+    #     'permanent_link',
+    #     'content',
+    #     'content_id',
+    #     'model',
+    #     'date',
+    #     'flagged',
+    #     'model_response'
+    # ]]
+    # gpt5_1_filter = _filter_not_relevant_wiki(gpt_5_1_responses)
+
+    # Get model summary 
+    summary = table_summary(df_openaiME_wiki)
+
+    print("Summary:")
+    for _, row in summary.iterrows():
+        print(f"& {row['date'].date()} & {row['total_responses']} & {row['num_flagged']} & {row['flag_rate'] * 100:.2f} \\\\")
