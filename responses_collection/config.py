@@ -11,6 +11,7 @@ openai_me_model = "omni-moderation-latest"
 openai_gpt41 = "gpt-4.1"
 openai_gpt5 = "gpt-5"
 openai_gpt51 = "gpt-5.1"
+openai_gpt52 = "gpt-5.2"
 deepseek_model = "deepseek-chat"
 
 config = {
@@ -52,6 +53,17 @@ config = {
         "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
         "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt51}.csv"),
         "max_tokens_per_day": 190000000,  # tier 4 has 200,000,000 tokens per day; refer to https://platform.openai.com/docs/models/gpt-5.1
+        "batch_size": 100,
+        "lengthy_refusal_truncation": 19000  # Truncate to 19000 characters for lengthy refusals (median of wiki)
+    },
+    "openai-gpt5.2": {
+        "api_key": openai_sorelle_api_key,
+        "model": openai_gpt52,
+        "endpoint": "/v1/chat/completions",
+        "rate_limit": 4,
+        "temp_file_template": os.path.join("data/processed/hist_response", "{model}_{dataset}_temp.csv"),
+        "output_file": os.path.join("data/processed/hist_response", f"{openai_gpt52}.csv"),
+        "max_tokens_per_day": 190000000,  # tier 4 has 200,000,000 tokens per day; refer to https://platform.openai.com/docs/models/gpt-5.2
         "batch_size": 100,
         "lengthy_refusal_truncation": 19000  # Truncate to 19000 characters for lengthy refusals (median of wiki)
     },

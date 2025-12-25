@@ -624,9 +624,9 @@ def _extract_flagged_status(model_response: str, model: str) -> int:
     
     return -1
 
-def test_process_dataset_with_gpt5_1():
+def test_process_dataset_with_gpt5_2():
     """
-    Test the process_dataset function with GPT-5.1 model
+    Test the process_dataset function with GPT-5.2 model
     """
     # Get API key from config
     try:
@@ -641,9 +641,9 @@ def test_process_dataset_with_gpt5_1():
         print("Error: api_config.json not found")
         return False
     
-    # Initialize client with GPT-5
-    print("=== Testing OpenAI Batch Client with GPT-5 ===")
-    client = OpenAIBatchClient(api_key=api_key, model="gpt-5.1")
+    # Initialize client with GPT-5.2
+    print("=== Testing OpenAI Batch Client with GPT-5.2 ===")
+    client = OpenAIBatchClient(api_key=api_key, model="gpt-5.2")
     
     # Create a small test dataset
     test_data = [
@@ -679,7 +679,7 @@ def test_process_dataset_with_gpt5_1():
     
     try:
         # Process the dataset
-        print("\nStarting batch processing with GPT-5.1...")
+        print("\nStarting batch processing with GPT-5.2...")
         results = client.process_dataset(test_df)
         
         # Validate results
@@ -703,7 +703,7 @@ def test_process_dataset_with_gpt5_1():
             except:
                 print(f"  Raw response: {result['model_response'][:100]}...")
         
-        print("\n✅ GPT-5.1 test completed successfully!")
+        print("\n✅ GPT-5.2 test completed successfully!")
         return True
         
     except Exception as e:
@@ -715,45 +715,45 @@ def test_process_dataset_with_gpt5_1():
         print(f"❌ Token counting test failed: {str(e)}")
         return False
 
-'''if __name__ == "__main__":
-    # Run tests for GPT-5.1 compatibility
-    print("Starting GPT-5.1 compatibility tests...\n")
+if __name__ == "__main__":
+    # Run tests for GPT-5.2 compatibility
+    print("Starting GPT-5.2 compatibility tests...\n")
     
     # Run full process_dataset test
-    process_test_passed = test_process_dataset_with_gpt5_1()
+    process_test_passed = test_process_dataset_with_gpt5_2()
         
     if process_test_passed:
-        print("\n🎉 All GPT-5.1 tests passed! The batch client is compatible with GPT-5.1.")
+        print("\n🎉 All GPT-5.2 tests passed! The batch client is compatible with GPT-5.2.")
     else:
-        print("\n⚠️ process_dataset test failed. Check the logs for details.")'''
+        print("\n⚠️ process_dataset test failed. Check the logs for details.")
 
-if __name__ == "__main__":
-    # Testing list_batches 
-    # Get API key from config
-    with open("responses_collection/api_config.json", "r") as f:
-        api_config = json.load(f)
-    api_key = api_config.get("openai_sorelle")
+# if __name__ == "__main__":
+#     # Testing list_batches 
+#     # Get API key from config
+#     with open("responses_collection/api_config.json", "r") as f:
+#         api_config = json.load(f)
+#     api_key = api_config.get("openai_sorelle")
 
-    if not api_key:
-        print("Error: OPENAI_API_KEY environment variable not set")
-        exit(1)
+#     if not api_key:
+#         print("Error: OPENAI_API_KEY environment variable not set")
+#         exit(1)
     
-    print("=== OpenAI Batch Client Test ===")
-    client = OpenAIBatchClient(api_key=api_key, model="gpt-5")
-    batch_list = client.list_batches(10)
-    client.log_print(f"Found {len(batch_list)} batches:")
-    for batch in batch_list:
-        client.log_print(f"ID: {batch['id']}, Status: {batch['status']}, Created At: {batch['created_at']}")
+#     print("=== OpenAI Batch Client Test ===")
+#     client = OpenAIBatchClient(api_key=api_key, model="gpt-5.2")
+#     batch_list = client.list_batches(10)
+#     client.log_print(f"Found {len(batch_list)} batches:")
+#     for batch in batch_list:
+#         client.log_print(f"ID: {batch['id']}, Status: {batch['status']}, Created At: {batch['created_at']}")
 
-    # batch_info = {'id': 'batch_68c1f7e622b0819084ab45a43c8b4568', 'status': 'completed', 'created_at': 1757542374, 'expires_at': 1757628774, 'completed_at': 1757542780, 'failed_at': None, 'request_counts': {'completed': 0, 'failed': 1000, 'total': 1000}, 'output_file_id': None, 'error_file_id': 'file-3Dqgj68saygD4La2MqiYqr'}
-    # results = client.retrieve_batch_results(batch_info)
-    # # save to CSV
-    # results_df = pd.DataFrame(results)
-    # print(results_df.head())
-    # results_df.to_csv("responses_collection/response_variance/gpt5_test_batch_results.csv")
+#     # batch_info = {'id': 'batch_68c1f7e622b0819084ab45a43c8b4568', 'status': 'completed', 'created_at': 1757542374, 'expires_at': 1757628774, 'completed_at': 1757542780, 'failed_at': None, 'request_counts': {'completed': 0, 'failed': 1000, 'total': 1000}, 'output_file_id': None, 'error_file_id': 'file-3Dqgj68saygD4La2MqiYqr'}
+#     # results = client.retrieve_batch_results(batch_info)
+#     # # save to CSV
+#     # results_df = pd.DataFrame(results)
+#     # print(results_df.head())
+#     # results_df.to_csv("responses_collection/response_variance/gpt5_test_batch_results.csv")
 
-    # Cancel the a batch with ID
-    # batch_id = "batch_68c160a017708190b0d9164b95f5dbbd"
-    # batch_id_2 = "batch_68c10c69d52c819083ea232c855e5b76"
-    # client.cancel_batch(batch_id)
-    # client.cancel_batch(batch_id_2)
+#     # Cancel the a batch with ID
+#     # batch_id = "batch_68c160a017708190b0d9164b95f5dbbd"
+#     # batch_id_2 = "batch_68c10c69d52c819083ea232c855e5b76"
+#     # client.cancel_batch(batch_id)
+#     # client.cancel_batch(batch_id_2)

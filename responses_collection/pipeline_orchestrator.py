@@ -21,6 +21,7 @@ class Pipeline:
             "openai-gpt4.1": 1/ config["openai-gpt4.1"]["rate_limit"],  # OpenAI GPT-4.1 rate limit: 60 requests/second
             "openai-gpt5": 1/ config["openai-gpt5"]["rate_limit"],  # OpenAI GPT-5 rate limit: 60 requests/second
             "openai-gpt5.1": 1/ config["openai-gpt5.1"]["rate_limit"],  # OpenAI GPT-5.1 rate limit: 60 requests/second
+            "openai-gpt5.2": 1/ config["openai-gpt5.2"]["rate_limit"],  # OpenAI GPT-5.2 rate limit: 60 requests/second
             "deepseek": 1/ config["deepseek"]["rate_limit"]  # Deepseek rate limit: 10 requests/second
         }
 
@@ -30,6 +31,7 @@ class Pipeline:
             "openai-gpt4.1": config["openai-gpt4.1"]["batch_size"],
             "openai-gpt5": config["openai-gpt5"]["batch_size"],
             "openai-gpt5.1": config["openai-gpt5.1"]["batch_size"],
+            "openai-gpt5.2": config["openai-gpt5.2"]["batch_size"],
             "deepseek": config["deepseek"]["batch_size"]
         }
         
@@ -81,7 +83,7 @@ class Pipeline:
         # Setup logger for this run
         logger = self._setup_logger(api_name, dataset_type)
         
-        if api_name not in ["openai-me", "deepseek", "openai-gpt4.1", "openai-gpt5", "openai-gpt5.1"]:
+        if api_name not in ["openai-me", "deepseek", "openai-gpt4.1", "openai-gpt5", "openai-gpt5.1", "openai-gpt5.2"]:
             error_msg = f"Unknown API: {api_name}"
             logger.error(error_msg)
             raise ValueError(error_msg)
@@ -148,8 +150,8 @@ class Pipeline:
         """Prepare data based on API requirements"""
         if api_name == "openai-me":
             return dataset  # OpenAI-ME does not require special formatting
-        elif api_name == "openai-gpt4.1" or api_name == "openai-gpt5" or api_name == "openai-gpt5.1":
-            # OpenAI GPT-4.1, GPT-5, and GPT-5.1 require content to be prefixed with "repeat after me:"
+        elif api_name == "openai-gpt4.1" or api_name == "openai-gpt5" or api_name == "openai-gpt5.1" or api_name == "openai-gpt5.2":
+            # OpenAI GPT-4.1, GPT-5, GPT-5.1, and GPT-5.2 require content to be prefixed with "repeat after me:"
             dataset['content'] = dataset['content'].apply(lambda x: f"repeat after me: {x}")
             return dataset
         elif api_name == "deepseek": 
@@ -321,6 +323,13 @@ class Pipeline:
                 model=self.config["openai-gpt5.1"]["model"],
                 endpoint=self.config["openai-gpt5.1"]["endpoint"]
             )
+        elif api_name == "openai-gpt5.2":
+            # Use OpenAI GPT-5.2 batch client for processing
+            client = OpenAIBatchClient(
+                api_key=self.config["openai-gpt5.2"]["api_key"],
+                model=self.config["openai-gpt5.2"]["model"],
+                endpoint=self.config["openai-gpt5.2"]["endpoint"]
+            )
         else:
             raise ValueError(f"Unknown API: {api_name}")
         
@@ -330,7 +339,7 @@ class Pipeline:
         results = []
 
         # If using OpenAI GPT batch client, process the entire batch at once
-        if api_name == "openai-gpt4.1" or api_name == "openai-gpt5" or api_name == "openai-gpt5.1":
+        if api_name == "openai-gpt4.1" or api_name == "openai-gpt5" or api_name == "openai-gpt5.1" or api_name == "openai-gpt5.2":
             results = client.process_dataset(batch)
             time.sleep(300)  # sleep for 5 minutes after processing a batch
             return pd.DataFrame(results)
