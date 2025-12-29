@@ -98,6 +98,9 @@ def main():
         
         if args.api in ["openai-gpt5.1"]:
             run_pipeline(dataset, "openai-gpt5.1", config, dataset_type)
+        
+        if args.api in ["openai-gpt5.2"]:
+            run_pipeline(dataset, "openai-gpt5.2", config, dataset_type)
 
     except Exception as e:
         print(f"\n❌ Fatal error: {str(e)}")
