@@ -2115,3 +2115,71 @@ Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
   post_me_51_flags['me_model_response'] = post_me_51_flags['me_model_response'].apply(lambda x: " ".join(x) if isinstance(x, list) else x)
+[main ed1bb16] Update visualizations
+ 13 files changed, 233996 insertions(+), 177597 deletions(-)
+ create mode 100644 data/processed/hist_response/deepseek-chat_cn-wiki_20260120_080205.csv
+ delete mode 100644 data/processed/hist_response/deepseek-chat_cn-wiki_temp.csv
+ create mode 100644 old_index_pages/index_old_20260120_080835.html
+error: cannot pull with rebase: You have unstaged changes.
+error: please commit or stash them.
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File data/charts/DeepSeek_Chat_Wikipedia_Moderation_Trends.json is 58.32 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/Emulated_ChatGPT_Wikipedia_Moderation_Trends.json is 55.82 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/OpenAI_GPT41_Wikipedia_Moderation_Trends.json is 50.77 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/OpenAI_Moderation_Endpoint_Wikipedia_Moderation_Trends.json is 89.06 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends_part1.json is 86.60 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File data/charts/DeepSeek_Chat_Chinese_Translated_Wikipedia_Moderation_Trends_part2.json is 86.32 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:genAIaudits/genAIaudits.github.io.git
+   ca88b94..ed1bb16  main -> main
+Renamed existing index.html to old_index_pages/index_old_20260120_080835.html
+Dashboard saved to index.html
+[2026-01-20 08:09:32] INFO: 📊 Running wiki dataset for deepseek
+[2026-01-20 23:40:43] ERROR: ❌ Non-validation error occurred for wiki dataset on attempt 1: (return code: 1)
+[2026-01-20 23:40:43] DEBUG: Combined output captured:
+📊 Loaded wiki dataset with 4210 rows
+
+📋 Starting deepseek pipeline...
+Starting pipeline for API: deepseek, Dataset: wiki, Rows: 4210
+✓ Data prepared for deepseek processing
+Total items to process: 3473
+✓ Processed batch of 50 items (3423 remaining)
+✓ Processed batch of 50 items (3373 remaining)
+✓ Processed batch of 50 items (3323 remaining)
+✓ Processed batch of 50 items (3273 remaining)
+✓ Processed batch of 50 items (3223 remaining)
+✓ Processed batch of 50 items (3173 remaining)
+✓ Processed batch of 50 items (3123 remaining)
+✓ Processed batch of 50 items (3073 remaining)
+✓ Processed batch of 50 items (3023 remaining)
+✓ Processed batch of 50 items (2973 remaining)
+✓ Processed batch of 50 items (2923 remaining)
+✓ Processed batch of 50 items (2873 remaining)
+✓ Processed batch of 50 items (2823 remaining)
+✓ Processed batch of 50 items (2773 remaining)
+✓ Processed batch of 50 items (2723 remaining)
+✓ Processed batch of 50 items (2673 remaining)
+✓ Processed batch of 50 items (2623 remaining)
+✓ Processed batch of 50 items (2573 remaining)
+✓ Processed batch of 50 items (2523 remaining)
+✓ Processed batch of 50 items (2473 remaining)
+✓ Processed batch of 50 items (2423 remaining)
+✓ Processed batch of 50 items (2373 remaining)
+✓ Processed batch of 50 items (2323 remaining)
+✓ Processed batch of 50 items (2273 remaining)
+✓ Processed batch of 50 items (2223 remaining)
+✓ Processed batch of 50 items (2173 remaining)
+✓ Processed batch of 50 items (2123 remaining)
+✓ Processed batch of 50 items (2073 remaining)
+✓ Processed batch of 50 items (2023 remaining)
+✓ Processed batch of 50 items (1973 remaining)
+✓ Processed batch of 50 items (1923 remaining)
+✓ Processed batch of 50 items (1873 remaining)
+✓ Processed batch of 50 items (1823 remaining)
+✓ Processed batch of 50 items (1773 remaining)
+✓ Processed batch of 50 items (1723 remaining)
+✓ Processed batch of 50 items (1673 remaining)
+Critical API error 402: Error code: 402 - {'error': {'message': 'Insufficient Balance', 'type': 'unknown_error', 'param': None, 'code': 'invalid_request_error'}}
+
+[2026-01-20 23:40:43] ERROR: deepseek pipeline failed
+Week 05 is odd - skipping DeepSeek pipeline
