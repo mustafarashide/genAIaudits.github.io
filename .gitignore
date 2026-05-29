@@ -28,3 +28,5 @@ __pycache__/
 logs/
 responses_collection/response_variance/logs/
 
+# data 
+data/
